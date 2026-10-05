@@ -14,22 +14,19 @@ import { Capacitor } from "@capacitor/core";
 import { GoogleSignIn } from "@capawesome/capacitor-google-sign-in";
 
 /**
- * Website GIS client (project 596375…).
- * Keep for browser "Sign in with Google" button.
+ * Website GIS client for the browser "Sign in with Google" button.
+ * Empty (the default) disables Google Sign-In; set VITE_GOOGLE_CLIENT_ID
+ * to a Web client ID from your own Google Cloud project to enable it.
  */
-export const GOOGLE_WEB_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  "596375721075-itbl6d2i44kekhniujmmm0g8jovoc9i6.apps.googleusercontent.com";
+export const GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 /**
- * Firebase / Android-linked Web client (project 609875…).
+ * Firebase / Android-linked Web client.
  * Used as serverClientId for native ID tokens so audience matches
  * the OAuth clients tied to package com.company.smart_agri.
  * Backend must list this in GOOGLE_CLIENT_ID or GOOGLE_CLIENT_IDS.
  */
-export const GOOGLE_NATIVE_WEB_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_NATIVE_CLIENT_ID ||
-  "609875913005-2od36vgq10osdp1ajohibcap37jab4ho.apps.googleusercontent.com";
+export const GOOGLE_NATIVE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_NATIVE_CLIENT_ID || "";
 
 const NATIVE_PACKAGE = "com.company.smart_agri";
 
@@ -60,7 +57,7 @@ export async function signInWithGoogleNative() {
     const result = await GoogleSignIn.signIn();
     if (!result?.idToken) {
       throw new Error(
-        "Google did not return an ID token. Ensure Azure accepts the Firebase web client ID."
+        "Google did not return an ID token. Ensure the backend accepts the Firebase web client ID."
       );
     }
     return result.idToken;
@@ -81,8 +78,8 @@ export async function signInWithGoogleNative() {
     ) {
       throw new Error(
         `Google Sign-In misconfigured. Package must be ${NATIVE_PACKAGE} ` +
-          "and SHA-1 must match Firebase (5E:8F:16:06:…). " +
-          "Also set Azure GOOGLE_CLIENT_IDS to include the Firebase web client ID."
+          "and the APK signing SHA-1 must match Firebase. " +
+          "Also set the backend GOOGLE_CLIENT_IDS to include the Firebase web client ID."
       );
     }
 

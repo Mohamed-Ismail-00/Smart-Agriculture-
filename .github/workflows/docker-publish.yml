@@ -29,6 +29,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: yassincodes/agri-backend:latest
-          cache-from: type=registry,ref=yassincodes/agri-backend:buildcache
-          cache-to: type=registry,ref=yassincodes/agri-backend:buildcache,mode=max
+          tags: ${{ secrets.DOCKERHUB_USERNAME || secrets.DOCKER_USERNAME }}/agri-backend:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME || secrets.DOCKER_USERNAME }}/agri-backend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME || secrets.DOCKER_USERNAME }}/agri-backend:buildcache,mode=max

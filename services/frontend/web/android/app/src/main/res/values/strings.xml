@@ -5,5 +5,5 @@
     <string name="package_name">com.company.smart_agri</string>
     <string name="custom_url_scheme">com.company.smart_agri</string>
     <!-- Web client ID used by Google Sign-In as serverClientId (Firebase project) -->
-    <string name="server_client_id">609875913005-2od36vgq10osdp1ajohibcap37jab4ho.apps.googleusercontent.com</string>
+    <string name="server_client_id"></string>
 </resources>

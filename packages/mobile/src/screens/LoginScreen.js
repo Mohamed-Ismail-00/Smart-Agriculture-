@@ -12,6 +12,7 @@ import {
 import { colors, spacing, radius, layout } from "@agri/shared/theme";
 import { useAuth } from "../context/AuthContext";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import Constants from "expo-constants";
 
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth();
@@ -27,8 +28,7 @@ export default function LoginScreen() {
     // webClientId MUST be a Web OAuth client ID so the ID token audience
     // matches backend GOOGLE_CLIENT_ID (not the Android client ID).
     GoogleSignin.configure({
-      webClientId:
-        "596375721075-itbl6d2i44kekhniujmmm0g8jovoc9i6.apps.googleusercontent.com",
+      webClientId: Constants.expoConfig?.extra?.googleWebClientId || "",
       offlineAccess: true,
     });
   }, []);

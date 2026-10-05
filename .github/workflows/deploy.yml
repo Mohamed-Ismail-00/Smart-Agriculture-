@@ -63,7 +63,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
           build-args: |
-            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID || '596375721075-itbl6d2i44kekhniujmmm0g8jovoc9i6.apps.googleusercontent.com' }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
 
       # -------------------------------------------------------------------
       # Update Azure App Service to pull the new image from Docker Hub.

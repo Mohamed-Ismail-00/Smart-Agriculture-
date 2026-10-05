@@ -60,7 +60,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - VITE_API_URL=http://backend:8000
-      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-596375721075-itbl6d2i44kekhniujmmm0g8jovoc9i6.apps.googleusercontent.com}
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-}
     volumes:
       - ./services/frontend/web:/app
       - /app/node_modules

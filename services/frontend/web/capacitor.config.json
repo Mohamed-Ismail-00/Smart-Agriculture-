@@ -5,7 +5,6 @@
   "server": {
     "androidScheme": "https",
     "allowNavigation": [
-      "smartagri.azurewebsites.net",
       "accounts.google.com",
       "*.google.com",
       "*.googleapis.com",

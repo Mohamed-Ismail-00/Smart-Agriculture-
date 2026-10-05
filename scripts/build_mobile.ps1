@@ -21,4 +21,4 @@ Set-Location android
 .\gradlew.bat assembleDebug
 
 Write-Host "Build finished! APK: packages\mobile\android\app\build\outputs\apk\debug\app-debug.apk"
-Write-Host "API base (app.json): https://smartagri.azurewebsites.net/api/v1"
+Write-Host "API base: see extra.apiBaseUrl in packages\mobile\app.json"

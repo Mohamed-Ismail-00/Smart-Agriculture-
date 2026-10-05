@@ -37,10 +37,8 @@
       "googleServicesFile": "./google-services.json"
     },
     "extra": {
-      "apiBaseUrl": "https://smartagri.azurewebsites.net/api/v1",
-      "eas": {
-        "projectId": "27c201d9-c446-4ee0-8c3c-1b6fbd84a5e9"
-      }
+      "apiBaseUrl": "http://10.0.2.2:8000/api/v1",
+      "googleWebClientId": ""
     }
   }
 }

@@ -21,17 +21,6 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Known clients used by this project (always accepted if present in token).
-# Safe defaults so mobile Firebase tokens work even if Azure only has the
-# website GOOGLE_CLIENT_ID set. Override / extend via env in production.
-_DEFAULT_EXTRA_CLIENT_IDS = (
-    # Website GIS web client
-    "596375721075-itbl6d2i44kekhniujmmm0g8jovoc9i6.apps.googleusercontent.com",
-    # Firebase web client (native Android serverClientId)
-    "609875913005-2od36vgq10osdp1ajohibcap37jab4ho.apps.googleusercontent.com",
-)
-
-
 def _split_ids(raw: str | None) -> list[str]:
     if not raw:
         return []
@@ -53,10 +42,6 @@ def _allowed_client_ids() -> list[str]:
         for cid in _split_ids(source):
             if cid not in ids:
                 ids.append(cid)
-    # Always allow project-known clients so mobile/web don't drift
-    for cid in _DEFAULT_EXTRA_CLIENT_IDS:
-        if cid not in ids:
-            ids.append(cid)
     return ids
 
 
@@ -70,13 +55,11 @@ def verify_google_token(token: str) -> dict[str, Any]:
     request = google_requests.Request()
     allowed = _allowed_client_ids()
 
-    try:
-        if not allowed:
-            logger.warning(
-                "GOOGLE_CLIENT_ID not set. Verifying without audience check (insecure for prod)."
-            )
-            return id_token.verify_oauth2_token(token, request)
+    if not allowed:
+        # No client ID configured: refuse rather than accept tokens issued for any app.
+        raise ValueError("Google sign-in is not configured (GOOGLE_CLIENT_ID is empty)")
 
+    try:
         last_error: Exception | None = None
         for audience in allowed:
             try:

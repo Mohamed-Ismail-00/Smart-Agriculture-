@@ -1,5 +1,5 @@
 # Build AgriData Egypt Android APK (Capacitor + Android SDK)
-# Connects to: https://smartagri.azurewebsites.net
+# Connects to: VITE_API_BASE_URL in services/frontend/web/.env.production
 #
 # Prerequisites:
 #   - Node.js / npm
@@ -37,7 +37,7 @@ Set-Content -Path $localProps -Value $sdkProp -Encoding ASCII
 
 Push-Location $WebDir
 try {
-  Write-Host "`n==> Building production web bundle (Azure API)..."
+  Write-Host "`n==> Building production web bundle..."
   npm.cmd run build
   if ($LASTEXITCODE -ne 0) { throw "vite build failed" }
 
@@ -64,7 +64,6 @@ try {
     Write-Host " BUILD SUCCESS" -ForegroundColor Green
     Write-Host " APK: $apk" -ForegroundColor Green
     Write-Host " Size: ${sizeMb} MB" -ForegroundColor Green
-    Write-Host " API:  https://smartagri.azurewebsites.net/api/v1" -ForegroundColor Green
     Write-Host "========================================`n" -ForegroundColor Green
 
     if ($OpenStudio) {
