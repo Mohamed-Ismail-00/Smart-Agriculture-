@@ -48,7 +48,7 @@ def require_land_access(
             user_id=current_user.user_id,
             action="unauthorized_land_access_attempt",
             target_type="land",
-            target_id=land.id,
+            target_id=land.land_id,
             details={"public_id": public_id, "user_id": current_user.user_id},
         )
         raise ResourceNotFoundOrForbidden()

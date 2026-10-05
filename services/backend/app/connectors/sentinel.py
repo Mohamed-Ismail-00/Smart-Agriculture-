@@ -28,6 +28,28 @@ IMAGES_DIR = Path(os.environ.get("IMAGES_DIR", "/data/images"))
 DATA_API_CROP_URL = "https://planetarycomputer.microsoft.com/api/data/v1/item/bbox/{bbox}.png"
 
 import math
+from datetime import datetime, timezone
+
+# Sentinel-2 L2A scenes from processing baseline 04.00 on (every acquisition since
+# 2022-01-25, plus older scenes ESA has reprocessed) store DN = reflectance * 10000 + 1000.
+# Planetary Computer serves the raw DNs, so the offset has to be removed here; skipping it
+# pulls NDVI down by roughly 0.25 over healthy crops.
+BOA_ADD_OFFSET_DN = 1000
+_BOA_OFFSET_FROM_BASELINE = 4.0
+_BOA_OFFSET_FROM_DATE = datetime(2022, 1, 25, tzinfo=timezone.utc)
+
+
+def boa_offset_dn(processing_baseline, acquired: Optional[datetime] = None) -> int:
+    """DN offset to subtract for a scene, from its `s2:processing_baseline` (date as fallback)."""
+    try:
+        return BOA_ADD_OFFSET_DN if float(processing_baseline) >= _BOA_OFFSET_FROM_BASELINE else 0
+    except (TypeError, ValueError):
+        pass
+    if acquired is None:
+        return BOA_ADD_OFFSET_DN
+    if acquired.tzinfo is None:
+        acquired = acquired.replace(tzinfo=timezone.utc)
+    return BOA_ADD_OFFSET_DN if acquired >= _BOA_OFFSET_FROM_DATE else 0
 
 def compute_bbox_from_area(lat: float, lon: float, area_ha: float) -> list[float]:
     """
@@ -63,17 +85,25 @@ def _pad_bbox(bbox: list[float], pad: float = 0.002) -> list[float]:
         bbox[3] + pad,
     ]
 
-def _build_preview_url(collection: str, item_id: str, bbox: list[float], mode: str = "true_color") -> str:
+def _build_preview_url(
+    collection: str,
+    item_id: str,
+    bbox: list[float],
+    mode: str = "true_color",
+    boa_offset: int = 0,
+) -> str:
     """Build a Planetary Computer preview URL for an item, cropped to the padded bounding box."""
     padded_bbox = _pad_bbox(bbox)
     bbox_str = f"{padded_bbox[0]},{padded_bbox[1]},{padded_bbox[2]},{padded_bbox[3]}"
     base_url = DATA_API_CROP_URL.format(bbox=bbox_str)
-    
+
     if mode == "ndvi":
+        # The offset cancels in the numerator and appears twice in the denominator.
+        denominator = f"(B08+B04-{2 * boa_offset})" if boa_offset else "(B08+B04)"
         params = {
             "collection": collection,
             "item": item_id,
-            "expression": "(B08-B04)/(B08+B04)",
+            "expression": f"(B08-B04)/{denominator}",
             "asset_as_band": "true",
             "colormap_name": "rdylgn",
             "rescale": "-0.2,0.8",
@@ -156,8 +186,16 @@ def fetch_sentinel_visual_urls(
                 date_str = properties.get("datetime", "")
                 cloud_cover = properties.get("eo:cloud_cover", 0)
 
+                acquired = None
+                if date_str:
+                    try:
+                        acquired = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
+                offset = boa_offset_dn(properties.get("s2:processing_baseline"), acquired)
+
                 tc_url = _build_preview_url(collection, item_id, bbox, "true_color")
-                ndvi_url = _build_preview_url(collection, item_id, bbox, "ndvi")
+                ndvi_url = _build_preview_url(collection, item_id, bbox, "ndvi", boa_offset=offset)
 
                 results.append({
                     "source": "ESA Sentinel-2 via Planetary Computer",
@@ -302,16 +340,30 @@ def _fetch_sentinel_timeseries_impl(
         logger.error("Failed to save raw Sentinel-2 NetCDF: %s", e)
     # ------------------------------------
     
-    # Scale factors for Sentinel-2 L2A on Planetary Computer: Reflectance = DN / 10000
-    # Create numpy arrays (T, H, W)
-    b02 = (ds.B02.values / 10000.0).astype(np.float32)
-    b03 = (ds.B03.values / 10000.0).astype(np.float32)
-    b04 = (ds.B04.values / 10000.0).astype(np.float32)
-    b08 = (ds.B08.values / 10000.0).astype(np.float32)
-    b11 = (ds.B11.values / 10000.0).astype(np.float32)
-    scl = ds.SCL.values
-    
     dates = pd.to_datetime(ds.time.values).to_pydatetime().tolist()
+
+    # Reflectance = (DN - offset) / 10000, with the offset decided per scene (see boa_offset_dn).
+    offset_by_time = {
+        pd.Timestamp(item.datetime).tz_convert(None): boa_offset_dn(
+            item.properties.get("s2:processing_baseline"), item.datetime
+        )
+        for item in items
+    }
+    offsets = np.array(
+        [offset_by_time.get(pd.Timestamp(d), boa_offset_dn(None, d)) for d in dates],
+        dtype=np.float32,
+    )[:, None, None]
+
+    def to_reflectance(dn):
+        return (np.clip(dn.astype(np.float32) - offsets, 0.0, None) / 10000.0).astype(np.float32)
+
+    # Create numpy arrays (T, H, W)
+    b02 = to_reflectance(ds.B02.values)
+    b03 = to_reflectance(ds.B03.values)
+    b04 = to_reflectance(ds.B04.values)
+    b08 = to_reflectance(ds.B08.values)
+    b11 = to_reflectance(ds.B11.values)
+    scl = ds.SCL.values
     
     if update_progress:
         update_progress("Applying cloud masking and quality scoring...")

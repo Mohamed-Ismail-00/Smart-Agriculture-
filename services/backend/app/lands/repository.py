@@ -578,6 +578,8 @@ def delete_land_cascading(db: Session, land_id: int) -> bool:
     db.execute(text('DELETE FROM land_crops WHERE land_id=:lid'), {'lid': lid})
     db.execute(text('DELETE FROM land_alerts WHERE land_id=:lid'), {'lid': lid})
     db.execute(text('DELETE FROM land_soil_profiles WHERE land_id=:lid'), {'lid': lid})
+    db.execute(text('DELETE FROM observation_provenance WHERE land_id=:lid'), {'lid': lid})
+    db.execute(text('DELETE FROM user_declared_crops WHERE land_id=:lid'), {'lid': lid})
     db.execute(text('DELETE FROM crop_zones WHERE land_id=:lid'), {'lid': lid})
     db.delete(land)
     return True

@@ -18,6 +18,23 @@ logger = logging.getLogger(__name__)
 URBAN_CLASSES = {"building", "amenity", "shop", "office"}
 URBAN_TYPES = {"residential", "commercial", "industrial", "house", "apartments", "retail"}
 
+
+def _point_on_feature(lat: float, lon: float, boundingbox) -> bool:
+    """
+    True when the point lies inside the OSM feature's bounding box.
+
+    Nominatim reverse returns the *nearest* feature, not the one under the point.
+    Delta fields sit between scattered farmhouses and ezbas, so the nearest feature
+    is routinely a house a few hundred metres away. Only a feature that actually
+    covers the point says anything about the land itself.
+    """
+    try:
+        south, north, west, east = (float(v) for v in boundingbox)
+    except (TypeError, ValueError):
+        return False
+    return south <= lat <= north and west <= lon <= east
+
+
 def validate_agricultural_land(lat: float, lon: float) -> None:
     """
     Validates that a coordinate pair likely represents farmland.
@@ -42,7 +59,7 @@ def validate_agricultural_land(lat: float, lon: float) -> None:
                 # small rural roads or irrigation paths often bisect large farms.
                 is_urban = osm_class in URBAN_CLASSES or (osm_type in URBAN_TYPES and osm_class != "highway")
 
-                if is_urban:
+                if is_urban and _point_on_feature(lat, lon, data.get("boundingbox")):
                     logger.warning("Validation failed: Urban signature detected (%s/%s).", osm_class, osm_type)
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
