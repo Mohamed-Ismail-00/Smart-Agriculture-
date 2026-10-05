@@ -87,20 +87,26 @@ def run_ndvi_history_backfill(
     savi_arr = indices.compute_savi(b08, b04)
     gndvi_arr = indices.compute_gndvi(b08, b03)
 
-    # Take median across spatial dimensions (H, W) -> shape (T,)
-    ndvi_medians = np.median(ndvi_arr, axis=(1, 2))
-    dvi_medians = np.median(dvi_arr, axis=(1, 2))
-    evi_medians = np.median(evi_arr, axis=(1, 2))
-    ndwi_medians = np.median(ndwi_arr, axis=(1, 2))
-    savi_medians = np.median(savi_arr, axis=(1, 2))
-    gndvi_medians = np.median(gndvi_arr, axis=(1, 2))
+    # Take median across spatial dimensions (H, W) -> shape (T,), ignoring cloud-masked pixels.
+    # A date where every pixel is masked stays NaN and is skipped below.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        ndvi_medians = np.nanmedian(ndvi_arr, axis=(1, 2))
+        dvi_medians = np.nanmedian(dvi_arr, axis=(1, 2))
+        evi_medians = np.nanmedian(evi_arr, axis=(1, 2))
+        ndwi_medians = np.nanmedian(ndwi_arr, axis=(1, 2))
+        savi_medians = np.nanmedian(savi_arr, axis=(1, 2))
+        gndvi_medians = np.nanmedian(gndvi_arr, axis=(1, 2))
 
     from app.models.land_crop import LandCrop
 
     # Insert into DB
     for t in range(len(dates)):
         dt = dates[t]
-        
+        if np.isnan(ndvi_medians[t]):
+            continue
+
         # Avoid exact duplicates
         existing = db.query(LandCrop).filter(LandCrop.land_id == land_id, LandCrop.timestamp == dt).first()
         if existing:

@@ -162,7 +162,8 @@ def run_crop_detection_task(land_id: int, db: Session, days: int = 90) -> None:
             for t in range(T):
                 vals = arr_3d[t][zone_mask]
                 vals = vals[~np.isnan(vals)]
-                medians[t] = float(np.nanmedian(vals)) if len(vals) > 0 else 0.0
+                # NaN = the zone was fully cloud-masked on this date (no observation)
+                medians[t] = float(np.nanmedian(vals)) if len(vals) > 0 else np.nan
             return medians
 
         zone_ndvi = masked_median(ndvi_arr)
@@ -172,7 +173,8 @@ def run_crop_detection_task(land_id: int, db: Session, days: int = 90) -> None:
         zone_savi = masked_median(savi_arr)
         zone_gndvi = masked_median(gndvi_arr)
 
-        latest_ndvi = zone_ndvi[-1] if len(zone_ndvi) > 0 else 0.0
+        observed = ~np.isnan(zone_ndvi)
+        latest_ndvi = zone_ndvi[observed][-1] if observed.any() else 0.0
         growth_stage = ndvi_engine.estimate_growth_stage(latest_ndvi, dates[-1].month)
 
         zone = CropZone(
@@ -195,6 +197,8 @@ def run_crop_detection_task(land_id: int, db: Session, days: int = 90) -> None:
         zone_id = int(zone.zone_id)
 
         for t in range(T):
+            if not observed[t]:
+                continue
             dt = dates[t]
             row = repository.insert_land_crop_snapshot(
                 db, land_id,
