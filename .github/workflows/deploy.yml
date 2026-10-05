@@ -1,10 +1,8 @@
 name: Build and Deploy to Azure App Service
 
+# Manual only in this fork: the Docker Hub / Azure secrets belong to the original project.
 on:
-  push:
-    branches:
-      - main
-      - feature/excel-export
+  workflow_dispatch:
 
 env:
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
