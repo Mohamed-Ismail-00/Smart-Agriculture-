@@ -192,31 +192,21 @@ def create_tables() -> None:
                     pass  # Column may already exist — safe to ignore
 
         # ---------------------------------------------------------------------------
-        # Data Migration: fix admin accounts in the deployed database
+        # Admin account: created once from ADMIN_EMAIL / ADMIN_PASSWORD (.env.backend).
+        # Registration cannot create admins, so this is the only way one appears.
         # ---------------------------------------------------------------------------
         with Session(engine) as session:
-            # Fix corrupted hashes from original seed
-            admin1 = session.query(User).filter_by(email="admin1@agri.local").first()
-            if admin1 and admin1.password_hash and "qKzzD80tRuD" in admin1.password_hash:
-                admin1.password_hash = "$5$rounds=535000$0elV25TH6NPgasYc$bSGKFwhqaC7QUWTvVTm2nWLoaDnO5Yi9gSOUSt0aSq0"
+            if settings.ADMIN_EMAIL and settings.ADMIN_PASSWORD:
+                from app.core.security import hash_password
 
-            admin2 = session.query(User).filter_by(email="admin2@agri.local").first()
-            if admin2 and admin2.password_hash and "ActzizWhrAnabV47VuIjX3KsS" in admin2.password_hash:
-                admin2.password_hash = "$5$rounds=535000$l4oZXLJrq6SmBbJA$8P1cMnEZLjdP79FdKhfVkn/RFtYqzJ1/moifBCS0jpB"
-
-            # Ensure a working admin account exists (admin1@agri.local is rejected by strict
-            # email validation because .local is a reserved TLD)
-            valid_admin = session.query(User).filter_by(email="admin@agri.com").first()
-            if not valid_admin:
-                new_admin = User(
-                    email="admin@agri.com",
-                    password_hash="$5$rounds=535000$0elV25TH6NPgasYc$bSGKFwhqaC7QUWTvVTm2nWLoaDnO5Yi9gSOUSt0aSq0",
-                    role="admin",
-                    is_active=True,
-                )
-                session.add(new_admin)
-            else:
-                valid_admin.role = "admin"  # Force admin role if user registered it manually
+                admin = session.query(User).filter_by(email=settings.ADMIN_EMAIL).first()
+                if not admin:
+                    session.add(User(
+                        email=settings.ADMIN_EMAIL,
+                        password_hash=hash_password(settings.ADMIN_PASSWORD),
+                        role="admin",
+                        is_active=True,
+                    ))
 
             # Reset any lands that got stuck in intermediate processing states before our error handling fix
             from app.models.land import Land

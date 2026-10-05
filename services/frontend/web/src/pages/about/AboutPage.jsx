@@ -264,7 +264,7 @@ export default function AboutPage() {
         <div>
           <div className="about-cta__title">Ready to explore?</div>
           <p className="about-cta__body">
-            Dive deeper into our data methodology, meet the team, or start monitoring your first field today.
+            Dive deeper into our data methodology or start monitoring your first field today.
           </p>
         </div>
         <div className="about-cta__actions">
@@ -273,9 +273,6 @@ export default function AboutPage() {
           </button>
           <button type="button" className="btn btn--secondary" onClick={() => navigate("/methodology")}>
             Data & Methodology
-          </button>
-          <button type="button" className="btn btn--secondary" onClick={() => navigate("/team")}>
-            Our Team
           </button>
         </div>
       </section>

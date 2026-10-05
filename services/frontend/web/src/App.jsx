@@ -23,7 +23,6 @@ import AddLandPage from "./pages/lands/AddLandPage";
 import LandDetailsPage from "./pages/lands/LandDetailsPage";
 import CompareLandsPage from "./pages/compare/CompareLandsPage";
 import MethodologyPage from "./pages/methodology/MethodologyPage";
-import TeamPage from "./pages/team/TeamPage";
 import AboutPage from "./pages/about/AboutPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import LogsPage from "./pages/logs/LogsPage";
@@ -90,7 +89,6 @@ function AppRoutes() {
       <Route path="/lands/:id" element={<ProtectedRoute><LandDetailsPage /></ProtectedRoute>} />
       <Route path="/lands/compare" element={<ProtectedRoute><CompareLandsPage /></ProtectedRoute>} />
       <Route path="/methodology" element={<ProtectedRoute><MethodologyPage /></ProtectedRoute>} />
-      <Route path="/team" element={<ProtectedRoute><TeamPage /></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/logs" element={<ProtectedRoute><LogsPage /></ProtectedRoute>} />

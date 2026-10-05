@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Admin account created on first startup (leave empty to create none)
+    ADMIN_EMAIL: str = ""
+    ADMIN_PASSWORD: str = ""
+
     # Security — API key encryption at rest (Fernet symmetric)
     # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     # IMPORTANT: Set this in .env.backend in production — never use the default!

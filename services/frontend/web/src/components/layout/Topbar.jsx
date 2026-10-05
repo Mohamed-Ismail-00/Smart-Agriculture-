@@ -15,7 +15,6 @@ const PAGE_TITLES = {
   "/lands": "Lands Explorer",
   "/lands/new": "Add New Land",
   "/methodology": "Data & Methodology",
-  "/team": "Our Team",
   "/about": "About the Project",
   "/profile": "My Profile",
   "/logs": "Activity Logs",

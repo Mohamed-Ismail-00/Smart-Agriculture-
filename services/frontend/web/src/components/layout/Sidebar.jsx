@@ -94,7 +94,6 @@ const baseNavItems = [
   { to: "/methodology", icon: "methodology", label: "Methodology" },
 
   { section: "GENERAL" },
-  { to: "/team",    icon: "team",    label: "Team" },
   { to: "/about",   icon: "about",   label: "About" },
   { to: "/profile", icon: "profile", label: "Profile" },
 ];
