@@ -1,0 +1,21 @@
+# Research environment (dataset building, EDA, model training).
+# Kept separate from the platform's backend image on purpose.
+#
+#   py -3.11 -m venv research/.venv
+#   research/.venv/Scripts/python -m pip install -r research/requirements.txt
+
+numpy
+pandas
+pyarrow
+scipy
+
+# Satellite imagery access (same sources the platform uses)
+rasterio
+pystac-client
+planetary-computer
+httpx
+
+# Exports and plots
+openpyxl
+xlsxwriter
+matplotlib
