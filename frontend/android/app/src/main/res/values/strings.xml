@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">AgriData Egypt</string>
-    <string name="title_activity_main">AgriData Egypt</string>
-    <string name="package_name">com.company.smart_agri</string>
-    <string name="custom_url_scheme">com.company.smart_agri</string>
-    <!-- Web client ID used by Google Sign-In as serverClientId (Firebase project) -->
-    <string name="server_client_id"></string>
-</resources>
