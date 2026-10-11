@@ -1,5 +1,5 @@
 /**
- * LandEnvironmentSection — live moisture/climate + static SoilGrids profile
+ * LandEnvironmentSection — SoilGrids soil profile and Open-Meteo climate history
  */
 
 import { useState } from "react";
@@ -16,15 +16,10 @@ function formatProfileValue(prop) {
 
 export default function LandEnvironmentSection({
   trackedVars,
-  soil,
   climate,
   soilProfile,
-  visibleSoil,
   visibleClimate,
-  avgSoilMoisture,
   avgClimateTemp,
-  showAllSoil,
-  setShowAllSoil,
   showAllClimate,
   setShowAllClimate,
   timeRangeSummaryText,
@@ -35,7 +30,6 @@ export default function LandEnvironmentSection({
 }) {
   const [soilRetryError, setSoilRetryError] = useState(null);
 
-  const hasSoil = trackedVars.includes("soil") && soil && soil.length > 0;
   const hasClimate = trackedVars.includes("climate") && climate && climate.length > 0;
   const hasStaticProfile = soilProfile?.profile_available;
   const soilUnavailable =
@@ -48,9 +42,6 @@ export default function LandEnvironmentSection({
   const sandProp = findProperty(soilProfile, "sand");
 
   const climateSourceLabel = resolveClimateSourceLabel(climateSampling);
-  const envSourceLabel = climateSampling?.spatial_scope === "polygon_mean"
-    ? climateSourceLabel
-    : LAND_DETAIL_SOURCES.soilLive;
   const showLargeFieldWarning =
     climateSampling?.large_field_warning ||
     (areaHectares > 50 && climateSampling?.high_spread);
@@ -74,7 +65,7 @@ export default function LandEnvironmentSection({
     }
   }
 
-  if (!hasSoil && !hasClimate && !hasStaticProfile && !soilUnavailable) {
+  if (!hasClimate && !hasStaticProfile && !soilUnavailable) {
     return (
       <div className="land-detail__section">
         <div className="card land-detail__empty-card">
@@ -136,7 +127,7 @@ export default function LandEnvironmentSection({
         <div className="land-detail__section anim-stagger" style={{ "--stagger-index": 3.5 }}>
           <div className="section-header land-section-header--mobile">
             <h2 className="section-header__title">Soil Profile</h2>
-            <span className="badge badge--info">SoilGrids</span>
+            <span className="badge badge--info">SoilGrids · estimate</span>
           </div>
           <div className="card land-detail-soil-profile">
             <div className="land-detail-soil-profile__header">
@@ -177,59 +168,10 @@ export default function LandEnvironmentSection({
         </div>
       )}
 
-      {hasSoil && (
-        <div className="land-detail__section anim-stagger" style={{ "--stagger-index": 4 }}>
-          <div className="section-header land-section-header--mobile">
-            <h2 className="section-header__title">Live Soil Moisture</h2>
-            <div className="land-detail__badge-row">
-              <span className="badge badge--info">Avg: {avgSoilMoisture}%</span>
-              <span className="badge badge--neutral">{soil.length} readings</span>
-            </div>
-          </div>
-          <div className="grid-3 land-detail-soil-grid">
-            {visibleSoil.map((s, i) => (
-              <div className="card land-detail-soil-card" key={i}>
-                <div className="land-detail-soil-card__top">
-                  <div className="text-overline">{new Date(s.timestamp).toLocaleDateString()}</div>
-                  {s.payload?.suitability_score && (
-                    <span className="badge badge--healthy">Score: {s.payload.suitability_score}/100</span>
-                  )}
-                </div>
-                <div className="land-detail-soil-card__metric">
-                  <div className="land-detail-soil-card__metric-label">
-                    <span className="text-body-sm" style={{ fontWeight: 600 }}>Moisture</span>
-                    <span className="text-caption">{s.value}%</span>
-                  </div>
-                  <div className="land-detail-soil-card__bar">
-                    <div style={{ width: `${s.value}%`, background: "var(--info)" }} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {soil.length > 6 && (
-            <div className="land-detail__show-more">
-              <button className="btn btn--ghost" onClick={() => setShowAllSoil(!showAllSoil)}>
-                {showAllSoil ? "Show Less" : `Show All (${soil.length})`}
-              </button>
-            </div>
-          )}
-          <p className="land-detail-section-footer text-caption">
-            {envSourceLabel} · ~2 day archive lag
-            {soil.length > 0 &&
-              ` · data through ${new Date(soil[soil.length - 1].timestamp).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}`}
-          </p>
-        </div>
-      )}
-
       {hasClimate && (
         <div className="land-detail__section anim-stagger" style={{ "--stagger-index": 6 }}>
           <div className="section-header land-section-header--mobile">
-            <h2 className="section-header__title">Climate History</h2>
+            <h2 className="section-header__title">Climate History (estimate)</h2>
             <div className="land-detail__badge-row">
               <span className="badge badge--info">Avg mean: {avgClimateTemp}°C</span>
               <span className="badge badge--neutral">{climate.length} records</span>

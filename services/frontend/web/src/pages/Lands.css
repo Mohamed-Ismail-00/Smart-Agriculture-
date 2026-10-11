@@ -1507,45 +1507,6 @@
   margin-bottom: var(--space-md);
 }
 
-.add-land-fields-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-md);
-}
-
-.tracking-options {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-sm);
-}
-
-.tracking-option {
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: 0 var(--space-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
-}
-
-.tracking-option:hover {
-  border-color: var(--green-400);
-  background: var(--green-50);
-  color: var(--green-700);
-}
-
-.tracking-option input {
-  accent-color: var(--green-600);
-}
-
 .add-land-map {
   height: 360px;
   border: 1.5px dashed var(--border-color);
@@ -1658,19 +1619,6 @@
 }
 
 @media (max-width: 640px) {
-  .add-land-fields-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .tracking-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .tracking-option {
-    min-height: var(--touch-target);
-  }
-
   .explore-btn {
     min-height: var(--touch-target);
     padding: 0 var(--space-sm);
@@ -1848,7 +1796,7 @@
   position: relative;
   background: var(--bg-primary);
   border-radius: var(--radius-xl);
-  padding: var(--space-2xl);
+  padding: var(--space-lg) var(--space-2xl);
   overflow: hidden;
   box-shadow: 0 10px 40px -10px rgba(34, 197, 94, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -1862,18 +1810,18 @@
 }
 
 .lands-hero__title {
-  font-size: 42px;
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.5px;
   color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+  margin-bottom: 2px;
   background: linear-gradient(135deg, var(--gray-900) 0%, var(--green-800) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .lands-hero__subtitle {
-  font-size: 18px;
+  font-size: 15px;
   color: var(--text-secondary);
   max-width: 500px;
   line-height: 1.5;

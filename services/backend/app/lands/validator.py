@@ -63,7 +63,7 @@ def validate_agricultural_land(lat: float, lon: float) -> None:
                     logger.warning("Validation failed: Urban signature detected (%s/%s).", osm_class, osm_type)
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Selected area is zoned as '{osm_class}/{osm_type}'. Please select agricultural land, not urban infrastructure."
+                        detail="This spot looks like a built-up area (buildings or roads), not farmland. Move the boundary onto a cultivated field."
                     )
     except httpx.RequestError as exc:
         logger.warning("Nominatim API request failed, skipping OSM validation: %s", exc)
@@ -93,7 +93,7 @@ def validate_agricultural_land(lat: float, lon: float) -> None:
             logger.warning("Validation failed: Insufficient vegetation (max_ndvi=%.3f).", max_ndvi)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Selected area lacks sufficient vegetation history (Max NDVI {max_ndvi:.2f} < 0.25). This typically indicates barren land or urban areas."
+                detail="No crop was seen on this spot in the last 90 days, so it looks like bare or built-up land. Choose a cultivated field."
             )
             
     except HTTPException:

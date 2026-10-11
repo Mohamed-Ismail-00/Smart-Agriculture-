@@ -115,19 +115,6 @@ body.map-draw-body-lock .topbar-notif-sheet {
   color: var(--green-700) !important;
 }
 
-/* Draw toolbar buttons */
-.map-draw-wrapper .leaflet-draw-toolbar a {
-  border-radius: 0 !important;
-}
-
-.map-draw-wrapper .leaflet-draw-toolbar a:first-child {
-  border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-}
-
-.map-draw-wrapper .leaflet-draw-toolbar a:last-child {
-  border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
-  border-bottom: none !important;
-}
 
 /* Draw tooltip styling */
 .leaflet-draw-tooltip {
@@ -858,6 +845,217 @@ body.map-draw-body-lock .topbar-notif-sheet {
   }
 }
 
-.leaflet-draw.leaflet-control {
-  display: none !important;
+/* --- Locator: search, my location, governorate shortcuts --- */
+.map-locator {
+  position: relative;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.map-locator__search {
+  position: relative;
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.map-locator__input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 var(--space-md);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.map-locator__input:focus {
+  outline: none;
+  border-color: var(--green-500);
+}
+
+.map-locator__btn {
+  height: 38px;
+  padding: 0 var(--space-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.map-locator__btn:hover:not(:disabled) {
+  border-color: var(--green-400);
+  background: var(--green-50);
+}
+
+.map-locator__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.map-locator__btn--primary {
+  color: #fff;
+  background: var(--green-600);
+  border-color: var(--green-600);
+}
+
+.map-locator__btn--primary:hover:not(:disabled) {
+  background: var(--green-700);
+  border-color: var(--green-700);
+}
+
+.map-locator__results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.map-locator__results button {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: start;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.map-locator__results button:hover {
+  background: var(--green-50);
+}
+
+.map-locator__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.map-locator__chip {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--gray-100);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.map-locator__chip span {
+  color: var(--text-secondary);
+  margin-inline-start: 4px;
+}
+
+.map-locator__chip:hover {
+  background: var(--green-50);
+  border-color: var(--green-400);
+}
+
+.map-locator__message {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* --- Actions shown while a shape is being drawn --- */
+.map-draw-actions {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-sm);
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 2 * var(--space-md));
+  padding: 6px 10px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.map-draw-actions__hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-inline-end: 4px;
+}
+
+.map-draw-actions .btn {
+  min-height: 0;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .map-locator__search {
+    flex-wrap: wrap;
+  }
+
+  .map-locator__input {
+    flex-basis: 100%;
+  }
+
+  .map-locator__btn {
+    flex: 1;
+  }
+
+  .map-draw-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    white-space: normal;
+  }
+}
+
+.map-info-panel__tip {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.map-toolbar__btn--main {
+  color: #fff;
+  background: var(--green-600);
+  font-weight: 600;
+}
+
+.map-toolbar__btn--main:hover,
+.map-toolbar__btn--draw.map-toolbar__btn--main.map-toolbar__btn--active {
+  color: #fff;
+  background: var(--green-700);
+  border-color: var(--green-700);
 }

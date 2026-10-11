@@ -66,6 +66,7 @@ def list_all_lands(db: Session, user_id: Optional[int] = None) -> LandListRespon
                 land_id=int(r.land_id),
                 public_id=str(r.public_id),
                 name=r.name,
+                description=r.description,
                 latitude=float(r.latitude),
                 longitude=float(r.longitude),
                 area_hectares=float(r.area_hectares) if r.area_hectares is not None else None,

@@ -94,3 +94,9 @@ present.html
 generate_skeleton.js
 terminals/
 Assets/
+
+# Course material from the TA (kept local)
+Advisor/
+
+# Output of the EDA notebook (rebuilt by running it)
+EDA/clean_samples.csv

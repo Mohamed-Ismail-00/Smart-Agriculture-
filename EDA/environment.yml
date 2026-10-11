@@ -1,0 +1,12 @@
+name: ghait
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - pyarrow
+  - matplotlib
+  - seaborn
+  - notebook
+  - ipykernel

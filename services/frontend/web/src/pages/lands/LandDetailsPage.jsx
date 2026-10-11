@@ -16,14 +16,12 @@ import LandCropsSection from "../../features/land-detail/LandCropsSection";
 import LandEnvironmentSection from "../../features/land-detail/LandEnvironmentSection";
 import LandWaterSection from "../../features/land-detail/LandWaterSection";
 import LandTimeRangeFilter from "../../features/land-detail/LandTimeRangeFilter";
-import AIChatPanel from "../../components/ai/AIChatPanel";
 import "../Lands.css";
 
 export default function LandDetailsPage() {
   const { id } = useParams();
   const { isDrawer } = useBreakpoint();
   const isMobileLayout = isDrawer;
-  const [chatState, setChatState] = useState({ isOpen: false, width: 380 });
   const [activeMobileSection, setActiveMobileSection] = useState("overview");
 
   const {
@@ -47,8 +45,6 @@ export default function LandDetailsPage() {
     setShowSettings,
     intervalDays,
     setIntervalDays,
-    showAllSoil,
-    setShowAllSoil,
     showAllClimate,
     setShowAllClimate,
     showAllWater,
@@ -90,15 +86,11 @@ export default function LandDetailsPage() {
   const {
     cropsByType,
     primaryZone,
-    visibleSoil,
     visibleClimate,
     visibleWater,
-    avgSoilMoisture,
     avgClimateTemp,
     avgWaterEt0,
-    latestWaterStatus,
     filteredClimate,
-    filteredSoil,
     filteredWater,
     filteredCrops,
     timeRangeCounts,
@@ -124,25 +116,6 @@ export default function LandDetailsPage() {
       setActiveMobileSection("overview");
     }
   }, [availableSections, activeMobileSection]);
-
-  useEffect(() => {
-    const contentArea = document.querySelector(".app-shell__content");
-    const isDesktop = !isDrawer;
-
-    if (contentArea) {
-      if (chatState.isOpen && isDesktop) {
-        const pad = Math.max(12, (chatState.width || 380) + 4);
-        contentArea.style.paddingRight = `${pad}px`;
-        contentArea.style.transition = "padding-right 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)";
-      } else {
-        contentArea.style.paddingRight = "0";
-      }
-    }
-
-    return () => {
-      if (contentArea) contentArea.style.paddingRight = "0";
-    };
-  }, [chatState.isOpen, chatState.width, isDrawer]);
 
   if (loading) {
     return (
@@ -181,6 +154,7 @@ export default function LandDetailsPage() {
         harvest={harvest}
         land={land}
         harvestTick={harvestTick}
+        declaredCrop={cropDetection?.declared_crop}
       />
       <LandAiInsightsSection
         landId={id}
@@ -235,19 +209,14 @@ export default function LandDetailsPage() {
   const environmentSection = (
     <LandEnvironmentSection
       trackedVars={trackedVars}
-      soil={filteredSoil}
       climate={filteredClimate}
       soilProfile={soilProfile}
       onRetrySoilProfile={handleRetrySoilProfile}
       soilRetryLoading={soilRetryLoading}
       climateSampling={climateSampling}
       areaHectares={areaHectares}
-      visibleSoil={visibleSoil}
       visibleClimate={visibleClimate}
-      avgSoilMoisture={avgSoilMoisture}
       avgClimateTemp={avgClimateTemp}
-      showAllSoil={showAllSoil}
-      setShowAllSoil={setShowAllSoil}
       showAllClimate={showAllClimate}
       setShowAllClimate={setShowAllClimate}
       timeRangeSummaryText={timeRangeSummaryText}
@@ -259,9 +228,7 @@ export default function LandDetailsPage() {
       water={filteredWater}
       visibleWater={visibleWater}
       land={land}
-      soil={filteredSoil}
       avgWaterEt0={avgWaterEt0}
-      latestWaterStatus={latestWaterStatus}
       showAllWater={showAllWater}
       setShowAllWater={setShowAllWater}
       timeRangeSummaryText={timeRangeSummaryText}
@@ -326,13 +293,6 @@ export default function LandDetailsPage() {
           </>
         )}
       </div>
-
-      <AIChatPanel
-        landId={id}
-        onResize={setChatState}
-        hasBottomNav={isMobileLayout}
-        suppressLauncher={showProgressModal || cropConfirmOpen}
-      />
     </React.Fragment>
   );
 }

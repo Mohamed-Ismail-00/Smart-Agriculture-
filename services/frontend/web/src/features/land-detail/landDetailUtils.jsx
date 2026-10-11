@@ -90,10 +90,9 @@ export function resolveClimateSourceLabel(climateSampling) {
 export const LAND_DETAIL_SOURCES = {
   ndvi: "Sentinel-2 · land polygon bbox",
   cropZones: "NDVI profile match · Sentinel-2 (suggested until confirmed)",
-  climate: "Open-Meteo · polygon mean (5 points)",
-  soilLive: "Open-Meteo · polygon mean (5 points)",
-  soilStatic: "ISRIC SoilGrids · land centroid",
-  water: "Open-Meteo ET₀ · polygon mean (5 points)",
+  climate: "Open-Meteo weather model (estimate) · polygon mean (5 points)",
+  soilStatic: "ISRIC SoilGrids global map (estimate) · land centroid",
+  water: "Open-Meteo ET₀ (estimate) · polygon mean (5 points)",
   satellite: "Sentinel-2 L2A · land polygon bbox",
   harvest: "NDVI peak analysis · full history",
   ai: "Groq Vision · on-demand analysis",
@@ -240,24 +239,6 @@ export function groupCropsByType(crops) {
   }, {});
 }
 
-export function isUnknownWaterStatus(status) {
-  return !status || status === "unknown";
-}
-
-export function deriveIrrigationStatus(soilMoisturePct, et0Mm) {
-  if (soilMoisturePct == null) {
-    if (et0Mm != null && et0Mm >= 8) return "needed_soon";
-    if (et0Mm != null) return "adequate";
-    return null;
-  }
-  const sm = Number(soilMoisturePct);
-  const et0 = Number(et0Mm || 0);
-  if (sm >= 55) return "excessive";
-  if (sm < 18 || (sm < 25 && et0 >= 6)) return "overdue";
-  if (sm < 28 || (sm < 35 && et0 >= 7)) return "needed_soon";
-  return "adequate";
-}
-
 export function estimateWaterFromEt0(et0Mm, areaHa) {
   if (et0Mm == null || !areaHa) return null;
   return et0Mm * areaHa * 10_000;
@@ -286,69 +267,22 @@ export function formatWaterEfficiency(ratio) {
   return null;
 }
 
-export function getIrrigationStatusLabel(status) {
-  const labels = {
-    adequate: "Adequate",
-    needed_soon: "Irrigation soon",
-    overdue: "Overdue",
-    excessive: "Excess moisture",
-    overuse: "Over-irrigated",
-  };
-  return labels[status] || null;
-}
-
-export function getIrrigationStatusBadge(status) {
-  const map = {
-    adequate: "healthy",
-    needed_soon: "warning",
-    overdue: "critical",
-    excessive: "info",
-    overuse: "warning",
-  };
-  return map[status] || "neutral";
-}
-
-export function buildSoilMoistureIndex(soilPoints) {
-  if (!soilPoints?.length) return {};
-  return soilPoints.reduce((acc, point) => {
-    const key = point.timestamp?.slice(0, 10);
-    if (key && point.value != null) acc[key] = point.value;
-    return acc;
-  }, {});
-}
-
-export function resolveWaterRecord(record, land, soilByDate) {
+export function resolveWaterRecord(record, land) {
   const et0 = record.payload?.crop_water_requirement_mm ?? null;
-  const dateKey = record.timestamp?.slice(0, 10);
-  const soilMoisture = dateKey ? soilByDate?.[dateKey] ?? null : null;
-
-  let status = record.payload?.irrigation_status;
-  if (isUnknownWaterStatus(status)) {
-    status = deriveIrrigationStatus(soilMoisture, et0);
-  }
 
   let waterLiters = record.value;
-  let waterSource = "stored";
+  let derivedVolume = false;
   if (waterLiters == null && et0 != null && land?.area_hectares) {
     waterLiters = estimateWaterFromEt0(et0, land.area_hectares);
-    waterSource = "et0_estimate";
+    derivedVolume = true;
   }
-
-  const efficiency = formatWaterEfficiency(record.payload?.water_efficiency_ratio);
 
   return {
     et0,
-    status,
-    statusLabel: getIrrigationStatusLabel(status) || "Not assessed",
-    statusBadge: getIrrigationStatusBadge(status),
-    waterLiters,
     waterFormatted: formatWaterVolumeLiters(waterLiters),
     et0Formatted: formatCropWaterReq(et0),
-    efficiency,
-    soilMoisture,
-    waterSource,
-    derivedStatus: isUnknownWaterStatus(record.payload?.irrigation_status) && status != null,
-    derivedVolume: record.value == null && waterSource === "et0_estimate",
+    efficiency: formatWaterEfficiency(record.payload?.water_efficiency_ratio),
+    derivedVolume,
   };
 }
 

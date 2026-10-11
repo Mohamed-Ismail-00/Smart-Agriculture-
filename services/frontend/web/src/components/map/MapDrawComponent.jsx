@@ -1,6 +1,8 @@
 /**
  * components/map/MapDrawComponent.jsx
- * Interactive Leaflet map with polygon/circle/rectangle drawing tools.
+ * Interactive Leaflet map: find a place (governorate, search, my location),
+ * then mark the field. One click drops a box on the field and its corners are
+ * dragged into place; drawing corner by corner is the alternative.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -36,6 +38,43 @@ const TILE_LAYERS = {
   },
 };
 
+// Bounding boxes [south, north, west, east] from OpenStreetMap (Nominatim).
+const DELTA_GOVERNORATES = [
+  { key: "sharqia", en: "Sharqia", ar: "الشرقية", box: [30.198, 31.062, 31.279, 32.226] },
+  { key: "kafr-el-sheikh", en: "Kafr El-Sheikh", ar: "كفر الشيخ", box: [30.963, 31.8, 30.209, 31.412] },
+  { key: "dakahlia", en: "Dakahlia", ar: "الدقهلية", box: [30.558, 31.728, 31.2, 32.346] },
+  { key: "gharbia", en: "Gharbia", ar: "الغربية", box: [30.575, 31.104, 30.747, 31.301] },
+  { key: "monufia", en: "Monufia", ar: "المنوفية", box: [30.171, 30.702, 30.354, 31.258] },
+  { key: "beheira", en: "Beheira", ar: "البحيرة", box: [29.92, 31.663, 29.617, 30.851] },
+  { key: "qalyubia", en: "Qalyubia", ar: "القليوبية", box: [30.093, 30.575, 31.055, 31.63] },
+  { key: "damietta", en: "Damietta", ar: "دمياط", box: [31.105, 31.735, 31.491, 32.065] },
+];
+
+const HECTARES_PER_FEDDAN = 0.420083;
+// Below this zoom a single field is too small on screen to mark.
+const MIN_MARK_ZOOM = 14;
+// Half the side of the starting box, as a share of the map's shorter side.
+const START_BOX_SHARE = 0.12;
+const ARABIC_CHARS = /[؀-ۿ]/;
+const COORDINATES = /^\s*(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)\s*$/;
+
+function boxToBounds([south, north, west, east]) {
+  return [[south, west], [north, east]];
+}
+
+async function searchPlaces(query) {
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    q: query,
+    countrycodes: "eg",
+    limit: "5",
+    "accept-language": ARABIC_CHARS.test(query) ? "ar" : "en",
+  });
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+  if (!res.ok) throw new Error("search failed");
+  return res.json();
+}
+
 const DRAW_SHAPE_OPTS = {
   color: "#22c55e",
   fillColor: "#22c55e",
@@ -60,20 +99,6 @@ function computeAreaHectares(latLngs) {
   return m2 / 10000;
 }
 
-function circleToGeoJSON(center, radiusMeters, numPoints = 32) {
-  const coords = [];
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (i / numPoints) * 2 * Math.PI;
-    const dx = radiusMeters * Math.cos(angle);
-    const dy = radiusMeters * Math.sin(angle);
-    const lat = center.lat + dy / 111320;
-    const lng = center.lng + dx / (111320 * Math.cos((center.lat * Math.PI) / 180));
-    coords.push([lng, lat]);
-  }
-  coords.push(coords[0]);
-  return { type: "Polygon", coordinates: [coords] };
-}
-
 function polygonToGeoJSON(latLngs) {
   const coords = latLngs.map((ll) => [ll.lng, ll.lat]);
   if (
@@ -86,26 +111,16 @@ function polygonToGeoJSON(latLngs) {
   return { type: "Polygon", coordinates: [coords] };
 }
 
-function extractFromLayer(layer, layerType) {
-  if (layerType === "circle") {
-    const center = layer.getLatLng();
-    const radius = layer.getRadius();
-    return {
-      geojson: circleToGeoJSON(center, radius),
-      stats: {
-        center: [center.lat, center.lng],
-        areaApprox: Math.round((Math.PI * radius * radius) / 100) / 100,
-        vertexCount: 32,
-      },
-    };
-  }
+function extractFromLayer(layer) {
   const latLngs = layer.getLatLngs()[0];
   const center = layer.getBounds().getCenter();
+  const hectares = computeAreaHectares(latLngs);
   return {
     geojson: polygonToGeoJSON(latLngs),
     stats: {
       center: [center.lat, center.lng],
-      areaApprox: Math.round(computeAreaHectares(latLngs) * 100) / 100,
+      areaApprox: Math.round(hectares * 100) / 100,
+      areaFeddan: Math.round((hectares / HECTARES_PER_FEDDAN) * 100) / 100,
       vertexCount: latLngs.length,
     },
   };
@@ -142,6 +157,7 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
   const tileRef = useRef(null);
   const callbackRef = useRef(onGeometryChange);
   const activeDrawRef = useRef(null);
+  const placingRef = useRef(false);
 
   const [activeLayer, setActiveLayer] = useState("satellite");
   const [hasShape, setHasShape] = useState(false);
@@ -149,6 +165,11 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [drawHint, setDrawHint] = useState(null);
   const [activeTool, setActiveTool] = useState(null);
+  const [vertexCount, setVertexCount] = useState(0);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [locatorMessage, setLocatorMessage] = useState(null);
 
   useEffect(() => {
     callbackRef.current = onGeometryChange;
@@ -169,7 +190,9 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
       }
       activeDrawRef.current = null;
     }
+    placingRef.current = false;
     setActiveTool(null);
+    setVertexCount(0);
     setDrawHint(null);
     const map = mapObjRef.current;
     if (map) {
@@ -178,9 +201,9 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
     }
   }, []);
 
-  const commitLayer = useCallback((layer, layerType) => {
+  const commitLayer = useCallback((layer) => {
     if (!drawnItemsRef.current) return false;
-    const { geojson, stats } = extractFromLayer(layer, layerType);
+    const { geojson, stats } = extractFromLayer(layer);
 
     if (stats.areaApprox < 0.001) {
       setDrawHint("Shape too small — zoom in and draw a larger area.");
@@ -192,6 +215,14 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
     drawnItemsRef.current.addLayer(layer);
     emitGeometry(geojson, stats);
     setDrawHint(null);
+
+    // Corners stay draggable: the numbers follow the drag, the form is told when it ends.
+    layer.editing?.enable();
+    layer.on("editdrag", () => setShapeStats(extractFromLayer(layer).stats));
+    layer.on("edit", () => {
+      const edited = extractFromLayer(layer);
+      emitGeometry(edited.geojson, edited.stats);
+    });
     requestAnimationFrame(() => {
       mapObjRef.current?.invalidateSize({ animate: false });
     });
@@ -220,34 +251,29 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
     map.addLayer(drawnItems);
     drawnItemsRef.current = drawnItems;
 
-    const drawControl = new L.Control.Draw({
-      position: "topleft",
-      draw: {
-        polygon: { allowIntersection: false, showArea: true, shapeOptions: DRAW_SHAPE_OPTS },
-        rectangle: { shapeOptions: DRAW_SHAPE_OPTS },
-        circle: { shapeOptions: DRAW_SHAPE_OPTS },
-        polyline: false,
-        marker: false,
-        circlemarker: false,
-      },
-      edit: { featureGroup: drawnItems, remove: true },
-    });
-    map.addControl(drawControl);
-
     map.on(L.Draw.Event.CREATED, (e) => {
       stopActiveDraw();
-      commitLayer(e.layer, e.layerType);
+      commitLayer(e.layer);
     });
 
-    map.on(L.Draw.Event.EDITED, (e) => {
-      e.layers.eachLayer((layer) => {
-        const isCircle = layer instanceof L.Circle;
-        commitLayer(layer, isCircle ? "circle" : "polygon");
-      });
+    map.on(L.Draw.Event.DRAWVERTEX, (e) => {
+      setVertexCount(e.layers.getLayers().length);
     });
 
-    map.on(L.Draw.Event.DELETED, () => {
-      emitGeometry(null, null);
+    map.on("click", (e) => {
+      if (!placingRef.current) return;
+      if (map.getZoom() < MIN_MARK_ZOOM) {
+        setDrawHint("Zoom in until you can see your field, then click on it");
+        return;
+      }
+      const size = map.getSize();
+      const half = Math.min(size.x, size.y) * START_BOX_SHARE;
+      const point = map.latLngToContainerPoint(e.latlng);
+      const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([dx, dy]) =>
+        map.containerPointToLatLng([point.x + dx * half, point.y + dy * half])
+      );
+      stopActiveDraw();
+      commitLayer(L.polygon(corners, DRAW_SHAPE_OPTS));
     });
 
     mapObjRef.current = map;
@@ -258,7 +284,7 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
       map.remove();
       mapObjRef.current = null;
     };
-  }, [commitLayer, emitGeometry, stopActiveDraw]);
+  }, [commitLayer, stopActiveDraw]);
 
   useEffect(() => {
     if (!mapObjRef.current) return;
@@ -323,28 +349,28 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
 
     stopActiveDraw();
 
+    if (tool === "place") {
+      placingRef.current = true;
+      map.getContainer().style.cursor = "crosshair";
+      setActiveTool(tool);
+      setDrawHint(isMobile ? "Tap the middle of your field" : "Click the middle of your field");
+      return;
+    }
+
     let handler = null;
     let hint = "";
 
     if (tool === "polygon") {
       handler = new L.Draw.Polygon(map, {
         allowIntersection: false,
-        showArea: true,
+        // leaflet-draw 1.0.4 throws in its area tooltip (undeclared variable in
+        // readableArea) once a polygon has three points, which blocks a fourth.
+        showArea: false,
         shapeOptions: DRAW_SHAPE_OPTS,
       });
       hint = isMobile
-        ? "Tap each corner, then tap the first point to finish"
-        : "Click each corner, then click the first point to close";
-    } else if (tool === "rectangle") {
-      handler = new L.Draw.Rectangle(map, { shapeOptions: DRAW_SHAPE_OPTS });
-      hint = isMobile
-        ? "Touch and drag to draw a rectangle"
-        : "Click and drag to draw a rectangle";
-    } else if (tool === "circle") {
-      handler = new L.Draw.Circle(map, { shapeOptions: DRAW_SHAPE_OPTS });
-      hint = isMobile
-        ? "Touch center and drag outward for a circle"
-        : "Click center and drag outward for a circle";
+        ? "Tap each corner of the field, then press Finish"
+        : "Click each corner of the field, then press Finish";
     }
 
     if (!handler) return;
@@ -353,6 +379,77 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
     setActiveTool(tool);
     setDrawHint(hint);
   }, [isMobile, stopActiveDraw]);
+
+  const undoLastPoint = useCallback(() => {
+    const handler = activeDrawRef.current;
+    if (!handler?.deleteLastVertex) return;
+    handler.deleteLastVertex();
+    setVertexCount((count) => Math.max(0, count - 1));
+  }, []);
+
+  const finishPolygon = useCallback(() => {
+    activeDrawRef.current?.completeShape?.();
+  }, []);
+
+  const goToGovernorate = useCallback((governorate) => {
+    setResults(null);
+    setLocatorMessage(null);
+    mapObjRef.current?.flyToBounds(boxToBounds(governorate.box), { duration: 1.2 });
+  }, []);
+
+  const goToResult = useCallback((place) => {
+    setResults(null);
+    setQuery(place.display_name);
+    mapObjRef.current?.flyToBounds(boxToBounds(place.boundingbox.map(Number)), { duration: 1.2, maxZoom: 16 });
+  }, []);
+
+  const runSearch = useCallback(async () => {
+    const text = query.trim();
+    if (!text) return;
+    setLocatorMessage(null);
+
+    const coords = text.match(COORDINATES);
+    if (coords) {
+      setResults(null);
+      mapObjRef.current?.flyTo([Number(coords[1]), Number(coords[2])], 16, { duration: 1.2 });
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const places = await searchPlaces(text);
+      if (places.length === 0) {
+        setResults(null);
+        setLocatorMessage("No place found. Try the name of the village, town or district.");
+      } else if (places.length === 1) {
+        goToResult(places[0]);
+      } else {
+        setResults(places);
+      }
+    } catch {
+      setResults(null);
+      setLocatorMessage("Search is not available right now. Pick a governorate or move the map.");
+    } finally {
+      setSearching(false);
+    }
+  }, [goToResult, query]);
+
+  const goToMyLocation = useCallback(() => {
+    setResults(null);
+    if (!navigator.geolocation) {
+      setLocatorMessage("This browser cannot share your location.");
+      return;
+    }
+    setLocatorMessage("Finding your location…");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocatorMessage(null);
+        mapObjRef.current?.flyTo([position.coords.latitude, position.coords.longitude], 16, { duration: 1.2 });
+      },
+      () => setLocatorMessage("Could not get your location. Allow location access, or use the search."),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   const enterFullscreen = useCallback((e) => {
     e?.preventDefault?.();
@@ -379,10 +476,126 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
   ].filter(Boolean).join(" ");
 
   const drawTools = [
-    { key: "polygon", label: "Polygon", icon: "⬠" },
-    { key: "rectangle", label: "Rectangle", icon: "▭" },
-    { key: "circle", label: "Circle", icon: "◯" },
+    { key: "place", label: "Mark my field", icon: "◎" },
+    { key: "polygon", label: "Draw corners", icon: "⬠" },
   ];
+
+  const locatorBar = (
+    <div className="map-locator">
+      <div className="map-locator__search" role="search">
+        <input
+          type="search"
+          className="map-locator__input"
+          placeholder="Search a village or town — ابحث باسم القرية أو المدينة"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              runSearch();
+            }
+          }}
+          dir="auto"
+          aria-label="Search for a place"
+        />
+        <button
+          type="button"
+          className="map-locator__btn map-locator__btn--primary"
+          onClick={runSearch}
+          disabled={searching || !query.trim()}
+        >
+          {searching ? "Searching…" : "Search"}
+        </button>
+        <button type="button" className="map-locator__btn" onClick={goToMyLocation}>
+          My location
+        </button>
+        {results && (
+          <ul className="map-locator__results">
+            {results.map((place) => (
+              <li key={place.place_id}>
+                <button type="button" dir="auto" onClick={() => goToResult(place)}>
+                  {place.display_name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="map-locator__chips" aria-label="Delta governorates">
+        {DELTA_GOVERNORATES.map((governorate) => (
+          <button
+            key={governorate.key}
+            type="button"
+            className="map-locator__chip"
+            onClick={() => goToGovernorate(governorate)}
+          >
+            {governorate.en} <span lang="ar">{governorate.ar}</span>
+          </button>
+        ))}
+      </div>
+      {locatorMessage && <div className="map-locator__message" role="status">{locatorMessage}</div>}
+    </div>
+  );
+
+  const desktopControls = !isCompactUI && !isFullscreen && (
+    <div className="map-top-controls map-top-controls--desktop">
+      <div className="map-toolbar">
+        <button
+          type="button"
+          className={`map-toolbar__btn${activeLayer === "satellite" ? " map-toolbar__btn--active" : ""}`}
+          onClick={() => switchLayer("satellite")}
+        >
+          Satellite
+        </button>
+        <button
+          type="button"
+          className={`map-toolbar__btn${activeLayer === "street" ? " map-toolbar__btn--active" : ""}`}
+          onClick={() => switchLayer("street")}
+        >
+          Street
+        </button>
+      </div>
+      <div className="map-toolbar">
+        {drawTools.map((tool) => (
+          <button
+            key={tool.key}
+            type="button"
+            className={`map-toolbar__btn map-toolbar__btn--draw${tool.key === "place" ? " map-toolbar__btn--main" : ""}${activeTool === tool.key ? " map-toolbar__btn--active" : ""}`}
+            onClick={() => startDraw(tool.key)}
+          >
+            <span aria-hidden="true">{tool.icon}</span> {tool.label}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="map-toolbar__btn map-fullscreen-btn"
+        onClick={toggleFullscreen}
+        aria-label="Enter fullscreen"
+      >
+        <FullscreenIcon exit={false} />
+      </button>
+    </div>
+  );
+
+  const drawActions = activeTool && (
+    <div className="map-draw-actions" role="status">
+      <span className="map-draw-actions__hint">{drawHint}</span>
+      {activeTool === "polygon" && (
+        <>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={undoLastPoint} disabled={vertexCount === 0}>
+            Undo point
+          </button>
+          <button type="button" className="btn btn--primary btn--sm" onClick={finishPolygon} disabled={vertexCount < 3}>
+            Finish
+          </button>
+        </>
+      )}
+      <button type="button" className="btn btn--ghost btn--sm" onClick={stopActiveDraw}>
+        Cancel
+      </button>
+    </div>
+  );
 
   const mapUI = (
     <div className={wrapperClass}>
@@ -468,7 +681,7 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
                   <button
                     key={tool.key}
                     type="button"
-                    className={`map-toolbar__btn map-toolbar__btn--draw${activeTool === tool.key ? " map-toolbar__btn--active" : ""}`}
+                    className={`map-toolbar__btn map-toolbar__btn--draw${tool.key === "place" ? " map-toolbar__btn--main" : ""}${activeTool === tool.key ? " map-toolbar__btn--active" : ""}`}
                     onClick={() => startDraw(tool.key)}
                   >
                     <span aria-hidden="true">{tool.icon}</span> {tool.label}
@@ -479,47 +692,7 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
           )}
         </div>
       )}
-      {/* Desktop inline toolbar (hidden in fullscreen) */}
-      {!isCompactUI && !isFullscreen && (
-        <div className="map-top-controls map-top-controls--desktop">
-          <div className="map-toolbar">
-            <button
-              type="button"
-              className={`map-toolbar__btn${activeLayer === "satellite" ? " map-toolbar__btn--active" : ""}`}
-              onClick={() => switchLayer("satellite")}
-            >
-              Satellite
-            </button>
-            <button
-              type="button"
-              className={`map-toolbar__btn${activeLayer === "street" ? " map-toolbar__btn--active" : ""}`}
-              onClick={() => switchLayer("street")}
-            >
-              Street
-            </button>
-          </div>
-          <div className="map-toolbar">
-            {drawTools.map((tool) => (
-              <button
-                key={tool.key}
-                type="button"
-                className={`map-toolbar__btn map-toolbar__btn--draw${activeTool === tool.key ? " map-toolbar__btn--active" : ""}`}
-                onClick={() => startDraw(tool.key)}
-              >
-                <span aria-hidden="true">{tool.icon}</span> {tool.label}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="map-toolbar__btn map-fullscreen-btn"
-            onClick={toggleFullscreen}
-            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          >
-            <FullscreenIcon exit={isFullscreen} />
-          </button>
-        </div>
-      )}
+      {locatorBar}
 
       {/* Mobile compact header */}
       {isCompactUI && !isFullscreen && (
@@ -555,18 +728,22 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
 
       <div className="map-draw-canvas">
         <div ref={mapElRef} className="map-container" />
+        {desktopControls}
+        {drawActions}
 
-        {!hasShape && (
+        {!hasShape && !activeTool && (
           <div className="map-instructions">
             <svg className="map-instructions__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 6l9-4 9 4" />
               <path d="M3 6v12l9 4 9-4V6" />
             </svg>
             <div className="map-instructions__text">
-              {drawHint || (isCompactUI ? "Choose a draw tool below" : "Use the draw tools to mark your land")}
+              {drawHint || "Find your field, then mark it"}
             </div>
             {!drawHint && (
-              <div className="map-instructions__sub">Polygon · Rectangle · Circle</div>
+              <div className="map-instructions__sub">
+                Pick a governorate or search above, zoom in, press Mark my field and click on it
+              </div>
             )}
           </div>
         )}
@@ -579,13 +756,12 @@ export default function MapDrawComponent({ onGeometryChange, onFullscreenChange 
                 <span className="map-info-panel__stat-label">Area</span>
               </div>
               <div className="map-info-panel__stat">
-                <span className="map-info-panel__stat-value">{shapeStats.center[0].toFixed(3)}°N</span>
-                <span className="map-info-panel__stat-label">Lat</span>
+                <span className="map-info-panel__stat-value">{shapeStats.areaFeddan}</span>
+                <span className="map-info-panel__stat-label">Feddan</span>
               </div>
-              <div className="map-info-panel__stat">
-                <span className="map-info-panel__stat-value">{shapeStats.center[1].toFixed(3)}°E</span>
-                <span className="map-info-panel__stat-label">Lng</span>
-              </div>
+            </div>
+            <div className="map-info-panel__tip">
+              Drag the white corners to fit your field. Drag a faint point on an edge to add a corner.
             </div>
             <div className="map-info-panel__actions">
               <button type="button" className="btn btn--ghost btn--sm" onClick={clearShape}>

@@ -680,24 +680,6 @@ export async function toggleAiApiKey(keyId, isActive) {
   });
 }
 
-/** GET /ai/lands/{land_id}/chat — get chat history */
-export async function getAiChatHistory(landId) {
-  return request(`/ai/lands/${landId}/chat`);
-}
-
-/** POST /ai/lands/{land_id}/chat — send a message */
-export async function sendAiChatMessage(landId, message) {
-  return request(`/ai/lands/${landId}/chat`, {
-    method: "POST",
-    body: JSON.stringify({ message }),
-  });
-}
-
-/** DELETE /ai/lands/{land_id}/chat — clear chat history */
-export async function clearAiChatHistory(landId) {
-  return request(`/ai/lands/${landId}/chat`, { method: "DELETE" });
-}
-
 /** GET /ai/lands/{land_id}/insights — get AI insights */
 export async function getAiInsights(landId) {
   return request(`/ai/lands/${landId}/insights`);

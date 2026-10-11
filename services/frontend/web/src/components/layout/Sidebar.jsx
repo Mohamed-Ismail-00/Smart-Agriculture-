@@ -40,27 +40,6 @@ const icons = {
       <path d="M7 8h3M7 12h3M14 8h3M14 12h3" />
     </svg>
   ),
-  methodology: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
-    </svg>
-  ),
-  team: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 00-3-3.87" />
-      <path d="M16 3.13a4 4 0 010 7.75" />
-    </svg>
-  ),
-  about: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4M12 8h.01" />
-    </svg>
-  ),
   profile: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -88,13 +67,9 @@ const baseNavItems = [
   { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
   { to: "/lands",     icon: "lands",     label: "Lands Explorer" },
   { to: "/lands/new", icon: "addLand",   label: "Add New Land" },
-
-  { section: "INSIGHTS" },
   { to: "/lands/compare", icon: "compare", label: "Compare Lands" },
-  { to: "/methodology", icon: "methodology", label: "Methodology" },
 
   { section: "GENERAL" },
-  { to: "/about",   icon: "about",   label: "About" },
   { to: "/profile", icon: "profile", label: "Profile" },
 ];
 

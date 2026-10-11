@@ -29,18 +29,13 @@ import {
 import { useConfirm } from "../context/ConfirmContext";
 import { useNotifications } from "../context/NotificationContext";
 import {
-  buildSoilMoistureIndex,
-  deriveIrrigationStatus,
   filterImagesByTimeRange,
   filterPointsByTimeRange,
   formatTimeRangeSummary,
-  getIrrigationStatusBadge,
-  getIrrigationStatusLabel,
   getPrimaryZone,
   getMultiMetricTimeRangeCounts,
   getTimeRangeSummary,
   groupCropsByType,
-  isUnknownWaterStatus,
 } from "../features/land-detail/landDetailUtils";
 
 const LAYERS = [
@@ -69,7 +64,6 @@ export function useLandDetail(landId) {
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [intervalDays, setIntervalDays] = useState(16);
-  const [showAllSoil, setShowAllSoil] = useState(false);
   const [showAllClimate, setShowAllClimate] = useState(false);
   const [showAllWater, setShowAllWater] = useState(false);
   const [showAllImages, setShowAllImages] = useState(false);
@@ -157,8 +151,7 @@ export function useLandDetail(landId) {
             const data = insight.structured_data || {};
             const isRealAlert =
               (data.risk_flags && data.risk_flags.length > 0) ||
-              ["poor", "critical"].includes(data.ndvi_assessment || data.spectral_assessment || "") ||
-              data.irrigation_status === "overdue";
+              ["poor", "critical"].includes(data.ndvi_assessment || data.spectral_assessment || "");
             if (isRealAlert) {
               addNotification({
                 type: "ai_alert",
@@ -242,7 +235,6 @@ export function useLandDetail(landId) {
   }, [land?.status, landId, fetchAll]);
 
   useEffect(() => {
-    setShowAllSoil(false);
     setShowAllClimate(false);
     setShowAllWater(false);
     setShowAllImages(false);
@@ -306,7 +298,6 @@ export function useLandDetail(landId) {
 
   const derived = useMemo(() => {
     const filteredClimate = filterPointsByTimeRange(climate, timeRangeDays);
-    const filteredSoil = filterPointsByTimeRange(soil, timeRangeDays);
     const filteredWater = filterPointsByTimeRange(water, timeRangeDays);
     const filteredCrops = filterPointsByTimeRange(crops, timeRangeDays);
     const filteredImagesAll = filterImagesByTimeRange(images, timeRangeDays);
@@ -352,7 +343,6 @@ export function useLandDetail(landId) {
 
     const latestCrop = filteredCrops.length > 0 ? filteredCrops[filteredCrops.length - 1] : null;
     const latestClimate = filteredClimate.length > 0 ? filteredClimate[filteredClimate.length - 1] : null;
-    const latestSoil = filteredSoil.length > 0 ? filteredSoil[filteredSoil.length - 1] : null;
     const latestWater = filteredWater.length > 0 ? filteredWater[filteredWater.length - 1] : null;
     const primaryZone = getPrimaryZone(cropZones);
     const primaryCropType = primaryZone
@@ -363,15 +353,10 @@ export function useLandDetail(landId) {
       activeLayer === "true_color" ? img.image_type === "true_color" : img.image_type === "ndvi"
     );
     const visibleImages = showAllImages ? filteredImages : filteredImages.slice(0, 6);
-    const reversedSoil = [...filteredSoil].reverse();
-    const visibleSoil = showAllSoil ? reversedSoil : reversedSoil.slice(0, 6);
     const reversedClimate = [...filteredClimate].reverse();
     const visibleClimate = showAllClimate ? reversedClimate : reversedClimate.slice(0, 6);
     const reversedWater = [...filteredWater].reverse();
     const visibleWater = showAllWater ? reversedWater : reversedWater.slice(0, 6);
-    const avgSoilMoisture = filteredSoil.length > 0
-      ? (filteredSoil.reduce((acc, s) => acc + (s.value || 0), 0) / filteredSoil.length).toFixed(1)
-      : "—";
     const avgClimateTemp = filteredClimate.length > 0
       ? (
           filteredClimate.reduce(
@@ -387,46 +372,22 @@ export function useLandDetail(landId) {
         ).toFixed(1)
       : "—";
 
-    const soilByDate = buildSoilMoistureIndex(filteredSoil);
-    let latestWaterStatus = null;
-    if (latestWater) {
-      let status = latestWater.payload?.irrigation_status;
-      if (isUnknownWaterStatus(status)) {
-        const dateKey = latestWater.timestamp?.slice(0, 10);
-        status = deriveIrrigationStatus(
-          dateKey ? soilByDate[dateKey] : null,
-          latestWater.payload?.crop_water_requirement_mm,
-        );
-      }
-      if (status) {
-        latestWaterStatus = {
-          label: getIrrigationStatusLabel(status) || "Not assessed",
-          badge: getIrrigationStatusBadge(status),
-        };
-      }
-    }
-
     return {
       latestCrop,
       latestClimate,
-      latestSoil,
       latestWater,
       primaryZone,
       primaryCropType,
       cropsByType,
       filteredClimate,
-      filteredSoil,
       filteredWater,
       filteredCrops,
       filteredImages,
       visibleImages,
-      visibleSoil,
       visibleClimate,
       visibleWater,
-      avgSoilMoisture,
       avgClimateTemp,
       avgWaterEt0,
-      latestWaterStatus,
       timeRangeCounts,
       timeRangeMetricBreakdown,
       timeRangeSummaryText,
@@ -435,7 +396,7 @@ export function useLandDetail(landId) {
     };
   }, [
     crops, climate, soil, water, cropZones, images, activeLayer, timeRangeDays,
-    showAllImages, showAllSoil, showAllClimate, showAllWater,
+    showAllImages, showAllClimate, showAllWater,
   ]);
 
   const handleExport = useCallback(async () => {
@@ -568,8 +529,6 @@ export function useLandDetail(landId) {
     setShowSettings,
     intervalDays,
     setIntervalDays,
-    showAllSoil,
-    setShowAllSoil,
     showAllClimate,
     setShowAllClimate,
     showAllWater,

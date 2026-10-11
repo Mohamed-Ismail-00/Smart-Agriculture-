@@ -10,11 +10,11 @@ export default function LandMetricsSection({
   harvest,
   land,
   harvestTick = 0,
+  declaredCrop,
 }) {
   const {
     latestCrop,
     latestClimate,
-    latestSoil,
     latestWater,
     primaryCropType,
     hasSyntheticCrops,
@@ -26,7 +26,6 @@ export default function LandMetricsSection({
 
   const sourceParts = [LAND_DETAIL_SOURCES.ndvi];
   if (trackedVars.includes("climate")) sourceParts.push(LAND_DETAIL_SOURCES.climate);
-  if (trackedVars.includes("soil")) sourceParts.push(LAND_DETAIL_SOURCES.soilLive);
   if (trackedVars.includes("water")) sourceParts.push(LAND_DETAIL_SOURCES.water);
   sourceParts.push(LAND_DETAIL_SOURCES.harvest);
 
@@ -58,7 +57,7 @@ export default function LandMetricsSection({
                   : `${latestClimate.value}°C`
                 : "—"}
             </div>
-            <div className="metric-card__label">Temperature Range</div>
+            <div className="metric-card__label">Temperature Range (estimate)</div>
             <div className="metric-card__sub">
               Mean: {latestClimate?.payload?.temperature_mean_c != null
                 ? `${latestClimate.payload.temperature_mean_c}°C`
@@ -68,15 +67,6 @@ export default function LandMetricsSection({
               {" · "}
               Humidity: {latestClimate?.payload?.humidity_pct ? `${latestClimate.payload.humidity_pct}%` : "—"}
             </div>
-          </div>
-        )}
-        {trackedVars.includes("soil") && (
-          <div className="metric-card">
-            <div className="metric-card__value">
-              {latestSoil ? `${latestSoil.value}%` : "—"}
-            </div>
-            <div className="metric-card__label">Soil Moisture</div>
-            <div className="metric-card__sub">Open-Meteo live</div>
           </div>
         )}
         {trackedVars.includes("water") && (
@@ -93,9 +83,13 @@ export default function LandMetricsSection({
           </div>
         )}
         <div className="metric-card">
-          <div className="metric-card__value">{primaryCropType?.split("(")[0]?.trim() || "Unknown"}</div>
+          <div className="metric-card__value">
+            {(declaredCrop || primaryCropType)?.split("(")[0]?.trim() || "Unknown"}
+          </div>
           <div className="metric-card__label">Primary Crop</div>
-          <div className="metric-card__sub">Trend: {latestCrop?.payload?.ndvi_trend || "—"}</div>
+          <div className="metric-card__sub">
+            {declaredCrop ? "Confirmed by you" : "Estimate"} · Trend: {latestCrop?.payload?.ndvi_trend || "—"}
+          </div>
         </div>
         <div className="metric-card">
           <div

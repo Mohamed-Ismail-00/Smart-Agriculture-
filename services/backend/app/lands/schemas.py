@@ -95,6 +95,7 @@ class LandListItem(BaseModel):
     land_id: int
     public_id: str
     name: str
+    description: Optional[str] = None
     latitude: float
     longitude: float
     area_hectares: Optional[float]

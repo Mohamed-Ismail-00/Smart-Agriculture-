@@ -37,6 +37,20 @@ function statusLabel(status) {
   return "Info";
 }
 
+const HECTARES_PER_FEDDAN = 0.420083;
+
+function formatArea(hectares) {
+  if (hectares == null) return "—";
+  const ha = Number(hectares);
+  return `${ha.toFixed(2)} ha · ${(ha / HECTARES_PER_FEDDAN).toFixed(1)} feddan`;
+}
+
+// The place a land was registered at is the first part of its description.
+function placeLabel(land) {
+  const place = land.description?.split("•")[0].trim();
+  return place || `${Number(land.latitude).toFixed(3)}°, ${Number(land.longitude).toFixed(3)}°`;
+}
+
 function showStatusDetail(status) {
   if (!status) return false;
   const s = status.toLowerCase();
@@ -85,10 +99,7 @@ function LandsMobileCard({ land, onOpen, onDelete }) {
           <p className="lands-mobile-card__status">{land.status}</p>
         )}
         <div className="lands-mobile-card__meta">
-          {land.area_hectares || "—"} ha
-          {land.latitude != null && land.longitude != null
-            ? ` · ${Number(land.latitude).toFixed(2)}°, ${Number(land.longitude).toFixed(2)}°`
-            : ""}
+          {formatArea(land.area_hectares)} · {placeLabel(land)}
         </div>
       </div>
       <div className="lands-mobile-card__actions">
@@ -134,7 +145,7 @@ function PremiumLandCard({ land, index, onOpen, onDelete, colorFn }) {
         <div className="thumb-overlay" />
         <span className={`premium-badge badge--${color}`}>
           <span className="badge__dot" />
-          {land.status.charAt(0).toUpperCase() + land.status.slice(1)}
+          {statusLabel(land.status)}
         </span>
       </div>
       <div className="premium-land-card__body">
@@ -145,14 +156,14 @@ function PremiumLandCard({ land, index, onOpen, onDelete, colorFn }) {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span>{land.latitude.toFixed(3)}°, {land.longitude.toFixed(3)}°</span>
+            <span>{placeLabel(land)}</span>
           </div>
           <div className="stat-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="M3 9h18" />
             </svg>
-            <span>{land.area_hectares || "—"} ha</span>
+            <span>{formatArea(land.area_hectares)}</span>
           </div>
         </div>
         <div className="premium-land-card__footer">
@@ -253,10 +264,9 @@ export default function LandsPage() {
     <div className={`anim-fade-in lands-page-container${isMobileLayout ? " lands-page--mobile" : ""}`}>
       <div className="lands-hero">
         <div className="lands-hero__content">
-          <h1 className="lands-hero__title">{isMobileLayout ? "My Lands" : "Explore Lands"}</h1>
+          <h1 className="lands-hero__title">My Lands</h1>
           <p className="lands-hero__subtitle">
             {lands.length} registered plot{lands.length !== 1 ? "s" : ""}
-            {!isMobileLayout && " — monitor in real-time"}
           </p>
         </div>
         <div className="lands-hero__blobs">

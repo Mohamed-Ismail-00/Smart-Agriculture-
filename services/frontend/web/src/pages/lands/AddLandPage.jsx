@@ -24,27 +24,7 @@ async function reverseGeocode(lat, lng) {
   }
 }
 
-function suggestCropFromLocation(geocode) {
-  const addr = geocode?.address || {};
-  const region = [
-    addr.state, addr.county, addr.city, addr.village, addr.town, addr.suburb,
-  ].filter(Boolean).join(" ").toLowerCase();
-
-  if (!region) return null;
-  if (region.match(/delta|kafr|damietta|beheira|sharqia|menofia|dakahlia|gharbia/)) {
-    return "Rice, Cotton, or Vegetables";
-  }
-  if (region.match(/fayoum|beni suef|minya|asyut|sohag|qena|luxor/)) {
-    return "Sugarcane, Wheat, or Clover";
-  }
-  if (region.match(/aswan|red sea|sinai|matrouh/)) {
-    return "Date Palm or Olive";
-  }
-  if (region.match(/giza|cairo|Alexandria|ismailia/)) {
-    return "Vegetables or Citrus";
-  }
-  return null;
-}
+const TRACKED_VARIABLES = ["ndvi", "climate", "soil", "water"];
 
 export default function AddLandPage() {
   const navigate = useNavigate();
@@ -54,16 +34,13 @@ export default function AddLandPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [trackingFrequency, setTrackingFrequency] = useState("16 days");
-  const [trackingVariables, setTrackingVariables] = useState(["ndvi", "climate", "soil", "water"]);
   const [geometry, setGeometry] = useState(null);
   const [shapeStats, setShapeStats] = useState(null);
 
-  const [aiSuggestion, setAiSuggestion] = useState(null);
-  const [aiAutoFilling, setAiAutoFilling] = useState(false);
-  const [aiDismissed, setAiDismissed] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
   const userEditedName = useRef(false);
   const userEditedDesc = useRef(false);
+  const locationFilled = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -74,11 +51,17 @@ export default function AddLandPage() {
     setGeometry(geojson);
     setShapeStats(stats);
     setError(null);
-    setAiDismissed(false);
 
-    if (stats?.center) {
+    // Reshaping the same field keeps the place it was first dropped on.
+    if (!geojson) {
+      locationFilled.current = false;
+      return;
+    }
+
+    if (stats?.center && !locationFilled.current) {
+      locationFilled.current = true;
       const [lat, lng] = stats.center;
-      setAiAutoFilling(true);
+      setAutoFilling(true);
       try {
         const geo = await reverseGeocode(lat, lng);
         if (geo) {
@@ -92,21 +75,15 @@ export default function AddLandPage() {
 
           const locationName = parts[0] || parts[1] || "Farm";
           const suggestedName = `${locationName} Farm`;
-          const cropHint = suggestCropFromLocation(geo);
-          const suggestedDesc = [
-            parts.slice(0, 3).join(", "),
-            stats.areaApprox ? `Approx. ${stats.areaApprox} ha` : null,
-            cropHint ? `Typical crops: ${cropHint}` : null,
-          ].filter(Boolean).join(" • ");
+          const suggestedDesc = parts.slice(0, 3).join(", ");
 
-          setAiSuggestion({ name: suggestedName, description: suggestedDesc, cropHint });
           if (!userEditedName.current) setName(suggestedName);
           if (!userEditedDesc.current) setDescription(suggestedDesc);
         }
       } catch {
         // non-fatal
       } finally {
-        setAiAutoFilling(false);
+        setAutoFilling(false);
       }
     }
   }, []);
@@ -133,7 +110,7 @@ export default function AddLandPage() {
         name: name.trim(),
         description: description.trim() || null,
         geometry,
-        metadata_: { trackingFrequency, trackingVariables },
+        metadata_: { trackingVariables: TRACKED_VARIABLES },
       });
 
       setPhase("done");
@@ -150,12 +127,6 @@ export default function AddLandPage() {
       setLoading(false);
       setPhase(null);
     }
-  };
-
-  const toggleTrackingVariable = (key) => {
-    setTrackingVariables((current) =>
-      current.includes(key) ? current.filter((item) => item !== key) : [...current, key]
-    );
   };
 
   const canSubmit = !loading && !!geometry && !!name.trim();
@@ -188,12 +159,12 @@ export default function AddLandPage() {
           <div className="add-land-header__titles">
             <h1 className="add-land-header__title">Register New Land</h1>
             <p className="add-land-header__subtitle">
-              Draw your field boundary on the map, then fill in the details to start satellite monitoring.
+Find your field on the map, mark it, then give it a name to start satellite monitoring.
             </p>
           </div>
           {step1Done && (
             <span className="add-land-header__badge">
-              {shapeStats?.areaApprox ?? "—"} ha
+              {shapeStats?.areaApprox ?? "—"} ha · {shapeStats?.areaFeddan ?? "—"} feddan
             </span>
           )}
         </div>
@@ -206,7 +177,7 @@ export default function AddLandPage() {
             <li className={`add-land-progress__step${step1Done ? " add-land-progress__step--done" : activeStep === 1 ? " add-land-progress__step--active" : ""}`}>
               <span className="add-land-progress__dot">{step1Done ? "✓" : "1"}</span>
               <div className="add-land-progress__copy">
-                <span className="add-land-progress__label">Draw boundary</span>
+                <span className="add-land-progress__label">Mark your field</span>
                 <span className="add-land-progress__hint">
                   {step1Done ? `${shapeStats?.areaApprox ?? "—"} ha drawn` : "Use the map below"}
                 </span>
@@ -217,7 +188,7 @@ export default function AddLandPage() {
               <div className="add-land-progress__copy">
                 <span className="add-land-progress__label">Land details</span>
                 <span className="add-land-progress__hint">
-                  {step2Done ? name : "Name & tracking"}
+                  {step2Done ? name : "Give it a name"}
                 </span>
               </div>
             </li>
@@ -247,7 +218,7 @@ export default function AddLandPage() {
               )}
             </div>
             <p className="add-land-section-intro__desc">
-              Outline your field on the map — this boundary defines the area we monitor with satellite imagery and environmental data.
+Pick your governorate or search for your village and zoom in until you see the field. Press Mark my field, click on it, then drag the corners to fit. This boundary is the area we monitor.
             </p>
           </div>
 
@@ -263,7 +234,7 @@ export default function AddLandPage() {
           <div className="add-land-section-intro add-land-section-intro--form">
             <h2 className="add-land-section-intro__title">Land Details</h2>
             <p className="add-land-section-intro__desc">
-              Name your parcel and choose tracking options for ongoing monitoring.
+Name your field. The name and description are filled in from its location and you can change them.
             </p>
           </div>
 
@@ -287,28 +258,10 @@ export default function AddLandPage() {
                   disabled={loading}
                 />
               </div>
-              {aiAutoFilling && (
+              {autoFilling && (
                 <div className="add-land-ai-loading">
                   <span className="spinner" style={{ width: 12, height: 12 }} />
                   Filling from location…
-                </div>
-              )}
-              {aiSuggestion && !aiDismissed && !aiAutoFilling && (
-                <div className="add-land-ai-banner">
-                  <span aria-hidden="true">✨</span>
-                  <span className="add-land-ai-banner__text">
-                    {aiSuggestion.cropHint
-                      ? `AI hint: ${aiSuggestion.cropHint}`
-                      : "AI suggested name from location"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setAiDismissed(true)}
-                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--text-secondary)", padding: 0 }}
-                    aria-label="Dismiss AI suggestion"
-                  >
-                    ✕
-                  </button>
                 </div>
               )}
             </div>
@@ -319,54 +272,12 @@ export default function AddLandPage() {
                 <textarea
                   id="land-description"
                   className="input-field input-field--no-icon"
-                  placeholder="Crop type, irrigation source, nearby landmarks…"
+                  placeholder="Anything that helps you recognise this field…"
                   value={description}
                   onChange={(e) => { userEditedDesc.current = true; setDescription(e.target.value); }}
                   disabled={loading}
                   style={{ height: 96, padding: 14, resize: "vertical" }}
                 />
-              </div>
-            </div>
-
-            <div className="add-land-fields-grid">
-              <div className="input-group">
-                <label htmlFor="tracking-frequency" className="input-label">Tracking Frequency</label>
-                <div className="input-wrapper">
-                  <select
-                    id="tracking-frequency"
-                    className="input-field input-field--select input-field--no-icon"
-                    value={trackingFrequency}
-                    onChange={(e) => setTrackingFrequency(e.target.value)}
-                    disabled={loading}
-                  >
-                    <option value="7 days">Every 7 days</option>
-                    <option value="14 days">Every 14 days</option>
-                    <option value="16 days">Every 16 days</option>
-                    <option value="30 days">Every 30 days</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="input-group">
-              <label className="input-label">Tracking Variables</label>
-              <div className="tracking-options add-land-tracking-options">
-                {[
-                  { key: "ndvi", label: "NDVI" },
-                  { key: "climate", label: "Climate" },
-                  { key: "soil", label: "Soil" },
-                  { key: "water", label: "Water" },
-                ].map((item) => (
-                  <label className="tracking-option" key={item.key}>
-                    <input
-                      type="checkbox"
-                      checked={item.key === "ndvi" ? true : trackingVariables.includes(item.key)}
-                      onChange={() => item.key !== "ndvi" && toggleTrackingVariable(item.key)}
-                      disabled={loading || item.key === "ndvi"}
-                    />
-                    <span>{item.label}</span>
-                  </label>
-                ))}
               </div>
             </div>
 
@@ -382,7 +293,9 @@ export default function AddLandPage() {
                   </div>
                   <div>
                     <div className="text-caption">Approx. area</div>
-                    <div className="text-body-sm" style={{ fontWeight: 600 }}>{shapeStats.areaApprox} ha</div>
+                    <div className="text-body-sm" style={{ fontWeight: 600 }}>
+                      {shapeStats.areaApprox} ha · {shapeStats.areaFeddan} feddan
+                    </div>
                   </div>
                 </div>
               </div>

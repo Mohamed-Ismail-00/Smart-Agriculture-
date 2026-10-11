@@ -25,7 +25,8 @@ export default function AuthenticatedImage({
 
     resolveAuthenticatedImageUrl(src).then((url) => {
       if (cancelled) {
-        if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+        // A cached blob URL is shared with other mounts of the same image.
+        if (url?.startsWith("blob:") && !isImageBlobCached(src)) URL.revokeObjectURL(url);
         return;
       }
       objectUrl = url;
