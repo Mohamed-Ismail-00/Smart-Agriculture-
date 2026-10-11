@@ -1,22 +1,23 @@
-# Multi-container orchestration (recommended)
 # Services: postgres, backend, scheduler (background), frontend (vite dev), nginx (proxy)
-# Use: docker compose up --build -d
-# Single container alternative exists at root Dockerfile (bundles FE+BE) but multi is preferred.
+# Use, from this folder: docker compose up --build -d
+
+# Fixed name so the database volume stays the same wherever this file lives.
+name: smartagriculturedataplatform
 
 services:
 
   postgres:
-    build: ./Database
+    build: ./postgres
     container_name: agri_postgres
     restart: always
     env_file:
-      - .env.db
+      - ../env/.env.db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./Database/init.sql:/docker-entrypoint-initdb.d/00_init.sql
-      - ./Database/seed.sql:/docker-entrypoint-initdb.d/20_seed.sql
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/00_init.sql
+      - ./postgres/seed.sql:/docker-entrypoint-initdb.d/20_seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U agri_user -d agriculture"]
       interval: 10s
@@ -25,12 +26,12 @@ services:
       start_period: 30s
 
   backend:
-    build: ./services/backend
+    build: ../backend
     container_name: agri_backend
     env_file:
-      - .env.backend
+      - ../env/.env.backend
     volumes:
-      - ./services/backend/app:/app/app
+      - ../backend/app:/app/app
       - ${DATA_DIR:-./data}:/data
     ports:
       - "8000:8000"
@@ -40,13 +41,13 @@ services:
     restart: on-failure
 
   scheduler:
-    build: ./services/backend
+    build: ../backend
     container_name: agri_scheduler
     env_file:
-      - .env.backend
+      - ../env/.env.backend
     command: ["python", "-m", "app.scheduler.runner"]
     volumes:
-      - ./services/backend/app:/app/app
+      - ../backend/app:/app/app
       - ${DATA_DIR:-./data}:/data
     depends_on:
       postgres:
@@ -54,7 +55,7 @@ services:
     restart: on-failure
 
   frontend:
-    build: ./services/frontend/web
+    build: ../frontend
     container_name: agri_frontend
     environment:
       - CHOKIDAR_USEPOLLING=true
@@ -62,7 +63,7 @@ services:
       - VITE_API_URL=http://backend:8000
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-}
     volumes:
-      - ./services/frontend/web:/app
+      - ../frontend:/app
       - /app/node_modules
     ports:
       - "5173:5173"
@@ -70,7 +71,7 @@ services:
       - backend
 
   nginx:
-    build: ./infra/nginx
+    build: ./nginx
     container_name: agri_nginx
     ports:
       - "80:80"

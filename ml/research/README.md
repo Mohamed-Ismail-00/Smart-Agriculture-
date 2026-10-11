@@ -4,7 +4,7 @@ Sentinel-2 time series for about one million 10 m pixels in two Nile Delta irrig
 districts, each labelled with the crop that FAO mapped there in 2023-2024. It is the
 training data for the crop classifier that replaces the platform's rule-based guess.
 
-The data itself is not in git (`research/data/` is ignored). Everything here rebuilds it.
+The data itself is not in git (`ml/research/data/` is ignored). Everything here rebuilds it.
 
 ## Sources
 
@@ -18,7 +18,7 @@ codes in its files.
 
 ## Pipeline
 
-Run from inside `research/` with the environment in `requirements.txt`.
+Run from inside `ml/research/` with the environment in `requirements.txt`.
 
 | Step | Script | Does |
 |---|---|---|
@@ -47,7 +47,7 @@ an independent read), `check_learnable.py` (a nearest-mean-curve classifier as a
 - **One orbit.** Only relative orbit 21, which covers both regions fully every 5 days.
   Orbit 64 clips one corner of Zankalon and would give those pixels twice the observations.
 - **Same formulas as the platform.** The reflectance offset rule and the vegetation indices
-  are imported from `services/backend`, so training data and live inference agree.
+  are imported from `backend/`, so training data and live inference agree.
 - **Cloud screening in three layers:** the Scene Classification mask (same classes the
   platform drops), a 100 m buffer around clouds and shadows, and a temporal test that drops a
   pass standing apart from both its neighbours the way haze (blue up) or shadow (NIR and
@@ -59,7 +59,7 @@ an independent read), `check_learnable.py` (a nearest-mean-curve classifier as a
 - **Dekads.** The 10-day calendar (1-10, 11-20, 21-end) is the one FAO WaPOR uses; a dekad
   holds the median of its clear passes.
 
-## Files (`research/data/dataset/`)
+## Files (`ml/research/data/dataset/`)
 
 | File | Content |
 |---|---|

@@ -15,7 +15,7 @@ import pandas as pd
 
 from config import BANDS, DATASET_DIR, REPO
 
-sys.path.insert(0, str(REPO / "services" / "backend"))
+sys.path.insert(0, str(REPO / "backend"))
 from app.cv import indices as platform_indices  # noqa: E402  (same formulas the platform serves)
 
 MISSING = -1

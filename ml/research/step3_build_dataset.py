@@ -33,7 +33,7 @@ from config import (
     BANDS, DATASET_DIR, DOUBTFUL_LABELS, LABELS_DIR, RAW_DIR, REGIONS, REPO, SCL_CLOUD, SCL_INVALID, SEASONS,
 )
 
-sys.path.insert(0, str(REPO / "services" / "backend"))
+sys.path.insert(0, str(REPO / "backend"))
 from app.connectors.sentinel import boa_offset_dn  # noqa: E402  (the platform's own rule)
 
 CLOUD_BUFFER_M = 100      # observations closer than this to a cloud or cloud shadow are dropped

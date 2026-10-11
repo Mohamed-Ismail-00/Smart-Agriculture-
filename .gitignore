@@ -41,9 +41,7 @@ MANIFEST
 # Environment
 .env
 .venv
-env/
 venv/
-ENV/
 env.bak/
 venv.bak/
 
@@ -53,7 +51,6 @@ venv.bak/
 
 # Pytest / local SQLite artifacts
 test.db
-services/backend/test.db
 
 # ==============================================================================
 # Node / JS
@@ -85,7 +82,6 @@ data/
 data/images/*
 !data/images/.gitkeep
 
-!Database/.gitkeep
 
 # Temporary / Junk
 _archive_backup_*
@@ -96,7 +92,7 @@ terminals/
 Assets/
 
 # Course material from the TA (kept local)
-Advisor/
+ml/advisor/
 
 # Output of the EDA notebook (rebuilt by running it)
-EDA/clean_samples.csv
+ml/eda/clean_samples.csv

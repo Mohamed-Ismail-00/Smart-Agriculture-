@@ -3,7 +3,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-REPO = ROOT.parent
+REPO = ROOT.parents[1]
 DATA = ROOT / "data"            # git-ignored
 FAO_DIR = DATA / "fao"          # FAO WaPOR crop type maps (downloaded as published)
 LABELS_DIR = DATA / "labels"    # label grids on the Sentinel-2 grid + sampled pixels
