@@ -250,12 +250,21 @@ def land_timeseries(
             if primary is not None:
                 effective_zone_id = int(primary.zone_id)
         rows = repository.list_land_crop_rows(db, land_id, zone_id=effective_zone_id)
+        if zone_id is None and effective_zone_id is not None:
+            # Monitoring stores new observations for the whole field (no zone). Without them the
+            # default series would stop at the date the zones were computed.
+            seen_days = {r.timestamp.date() for r in rows}
+            field_rows = [
+                r for r in repository.list_land_crop_rows(db, land_id)
+                if r.zone_id is None and r.timestamp.date() not in seen_days
+            ]
+            rows = sorted([*rows, *field_rows], key=lambda r: r.timestamp)
         source_cache: dict = {}
         points = []
         for r in rows:
             payload = {}
-            if effective_zone_id is not None:
-                payload["zone_id"] = effective_zone_id
+            if r.zone_id is not None:
+                payload["zone_id"] = int(r.zone_id)
             obs_source = _crop_observation_source(db, r.source_id, source_cache)
             if obs_source:
                 payload["data_source"] = obs_source

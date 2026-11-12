@@ -20,6 +20,7 @@ from app.lands import repository
 logger = logging.getLogger(__name__)
 
 ENVIRONMENT_REFRESH_DAYS = 7
+MAX_ENVIRONMENT_CATCHUP_DAYS = 120
 SATELLITE_LOOKBACK_DAYS = 180
 NDVI_LOOKBACK_DAYS = 90
 
@@ -38,7 +39,8 @@ def _is_due_for_monitoring(db: Session, land_id: int, interval_days: int) -> boo
 def _refresh_single_land(db: Session, land_id: int) -> bool:
     """Run incremental refreshes for one land. Returns True if any step succeeded."""
     from app.pipeline.land_discovery_pipeline import refresh_environment_data
-    from app.tasks.satellite_task import run_ndvi_history_backfill, run_sentinel_visual_fetch
+    from app.tasks.satellite_task import run_ndvi_history_backfill
+    from app.tasks.sentinel_task import run_sentinel_visual_fetch
 
     land = repository.get_land(db, land_id)
     if land is None:
@@ -46,7 +48,14 @@ def _refresh_single_land(db: Session, land_id: int) -> bool:
 
     succeeded = False
 
-    if refresh_environment_data(land_id, db, days=ENVIRONMENT_REFRESH_DAYS):
+    # Reach back to the last stored day, so a stack that was off for weeks leaves no gap.
+    latest = repository.get_latest_climate_timestamp(db, land_id)
+    if latest is not None and latest.tzinfo is None:
+        latest = latest.replace(tzinfo=timezone.utc)
+    gap_days = (datetime.now(timezone.utc) - latest).days + 3 if latest else ENVIRONMENT_REFRESH_DAYS
+    env_days = min(max(ENVIRONMENT_REFRESH_DAYS, gap_days), MAX_ENVIRONMENT_CATCHUP_DAYS)
+
+    if refresh_environment_data(land_id, db, days=env_days):
         succeeded = True
 
     try:

@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import signal
 import sys
+from datetime import datetime, timezone
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -29,13 +30,16 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     scheduler = BlockingScheduler()
 
-    # Job 1: Full land monitoring cycle (satellite + AI auto-trigger)
+    # Job 1: Full land monitoring cycle (satellite + AI auto-trigger).
+    # It also runs once at startup: the stack is often stopped before a full interval passes,
+    # and lands that are not yet due are skipped by the cycle itself.
     scheduler.add_job(
         jobs.run_land_monitoring_cycle,
         "interval",
         minutes=max(1, settings.LAND_MONITOR_INTERVAL_MINUTES),
         id="land_monitoring",
         replace_existing=True,
+        next_run_time=datetime.now(timezone.utc),
     )
 
     # Job 2: Proactive AI stale insight refresh
