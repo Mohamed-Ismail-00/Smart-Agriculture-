@@ -3,10 +3,21 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { getLandStatusBadge, formatTaskStatus, formatPipelineWarnings } from "./landDetailUtils";
+import {
+  daysSince,
+  formatArea,
+  formatDate,
+  formatPipelineWarnings,
+  formatTaskStatus,
+  getLandStatusBadge,
+} from "./landDetailUtils";
+
+// Sentinel-2 revisits every 5 days; older than this means the monitoring has not run.
+const STALE_AFTER_DAYS = 20;
 
 export default function LandDetailHeader({
   land,
+  lastSatellite,
   reanalyzing,
   isExporting,
   showSettings,
@@ -25,6 +36,7 @@ export default function LandDetailHeader({
   const statusBadge = getLandStatusBadge(land.status);
   const pipelineWarnings = land?.metadata_?.pipeline_warnings;
   const pipelineWarningText = formatPipelineWarnings(pipelineWarnings);
+  const staleDays = daysSince(lastSatellite);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showReanalyzeModal, setShowReanalyzeModal] = useState(false);
   const [refreshOptions, setRefreshOptions] = useState({
@@ -35,9 +47,9 @@ export default function LandDetailHeader({
   const menuRef = useRef(null);
 
   const refreshLabels = {
-    environment: "Environment (climate, soil moisture, water)",
-    satellite: "Satellite imagery (Sentinel-2)",
-    crops: "Crop NDVI & zones",
+    environment: "Weather and water need",
+    satellite: "Satellite images (Sentinel-2)",
+    crops: "Crop growth curve (NDVI)",
   };
 
   const toggleRefresh = (key) => {
@@ -137,48 +149,57 @@ export default function LandDetailHeader({
               )}
             </div>
           </div>
-        ) : (
-          <div className="land-detail__header-info">
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
-              <button className="btn btn--ghost btn--sm" onClick={onBack}>
+        ) : null}
+
+        <div className="land-detail__header-info">
+          {!isMobile && (
+            <>
+              <button className="btn btn--ghost btn--sm land-detail__back" onClick={onBack}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
                 Back
               </button>
-            </div>
-            <h1 className="land-detail__title">{land.name}</h1>
-          </div>
-        )}
-
-        <div className={`land-detail__meta${isMobile ? " land-detail__meta--mobile" : ""}`}>
-          <span className="land-detail__meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            {land.latitude.toFixed(4)}°N, {land.longitude.toFixed(4)}°E
-          </span>
-          <span className="land-detail__meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18M9 3v18" />
-            </svg>
-            {land.area_hectares} ha
-          </span>
-          {!isMobile && (
-            <span className={`badge badge--${statusBadge}`}>
-              <span className="badge__dot" />
-              {land.status.charAt(0).toUpperCase() + land.status.slice(1)}
-            </span>
+              <div className="land-detail__title-row">
+                <h1 className="land-detail__title">{land.name}</h1>
+                <span className={`badge badge--${statusBadge}`}>
+                  <span className="badge__dot" />
+                  {land.status.charAt(0).toUpperCase() + land.status.slice(1)}
+                </span>
+              </div>
+            </>
           )}
-        </div>
 
-        {land.description && (
-          <p className={`land-detail__description${isMobile ? " land-detail__description--mobile" : ""}`}>
-            {land.description}
-          </p>
-        )}
+          {land.description && (
+            <p className={`land-detail__description${isMobile ? " land-detail__description--mobile" : ""}`}>
+              {land.description}
+            </p>
+          )}
+
+          <div className={`land-detail__meta${isMobile ? " land-detail__meta--mobile" : ""}`}>
+            <span className="land-detail__meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {land.latitude.toFixed(4)}°N, {land.longitude.toFixed(4)}°E
+            </span>
+            <span className="land-detail__meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 3v18" />
+              </svg>
+              {formatArea(land.area_hectares)}
+            </span>
+            <span className="land-detail__meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="2" />
+                <path d="M16.24 7.76a6 6 0 010 8.49M7.76 16.24a6 6 0 010-8.49" />
+              </svg>
+              Last satellite image: {formatDate(lastSatellite)}
+            </span>
+          </div>
+        </div>
 
         {!isMobile && (
           <div className="land-detail__header-actions">
@@ -274,6 +295,15 @@ export default function LandDetailHeader({
               <button className="btn btn--primary" onClick={onSaveSettings}>Save</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {staleDays != null && staleDays > STALE_AFTER_DAYS && !reanalyzing && (
+        <div className="land-detail-data-notice land-detail-data-notice--warning">
+          <p className="text-body-sm" style={{ margin: 0 }}>
+            The newest satellite image is {staleDays} days old. Sentinel-2 passes every 5 days, so newer images
+            should exist. <button type="button" className="land-detail__inline-link" onClick={() => setShowReanalyzeModal(true)}>Update now</button>
+          </p>
         </div>
       )}
 

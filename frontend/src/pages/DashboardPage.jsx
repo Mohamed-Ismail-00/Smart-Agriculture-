@@ -33,18 +33,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { isDrawer, isMobile } = useBreakpoint();
   const isMobileLayout = isDrawer;
-  const {
-    lands,
-    ndviData,
-    loading,
-    aiInsights,
-    aiLoading,
-    aiError,
-    analyzingLandId,
-    preferredLandId,
-    stats,
-    triggerAnalysis,
-  } = useDashboard();
+  const { lands, ndviData, loading, stats } = useDashboard();
 
   const firstName = user?.email?.split("@")[0] || "Farmer";
 
@@ -229,38 +218,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {preferredLandId && (
-        <div className="ai-insights-panel anim-stagger" style={{ "--stagger-index": 3 }}>
-          <div className="ai-insights-header">
-            <div>
-              <span className="ai-badge">✨ AI Agronomist</span>
-              <h2 className="section-header__title" style={{ marginTop: "var(--space-sm)" }}>Deep Intelligence</h2>
-            </div>
-            <button type="button" className="ai-trigger-btn" onClick={triggerAnalysis} disabled={analyzingLandId === preferredLandId}>
-              {analyzingLandId === preferredLandId ? "Analyzing..." : "Generate AI Analysis"}
-            </button>
-          </div>
-          {aiLoading ? (
-            <div style={{ padding: "var(--space-xl)", textAlign: "center", color: "var(--text-secondary)" }}>Loading AI Insights...</div>
-          ) : aiError ? (
-            <div className="alert alert--error" style={{ margin: "var(--space-md)", padding: "var(--space-lg)" }}>{aiError}</div>
-          ) : aiInsights.length > 0 ? (
-            <div className="ai-card-grid">
-              {aiInsights.map((insight) => (
-                <div key={insight.insight_id} className="ai-insight-card">
-                  <div className="ai-insight-title">{insight.title}</div>
-                  <div className="ai-insight-body">{insight.body}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state" style={{ padding: "var(--space-xl)" }}>
-              <p className="text-body-sm">No AI insights yet. Tap the button above to run an analysis.</p>
-            </div>
-          )}
-        </div>
-      )}
 
       {lands.length > 0 && (
         <div className="anim-stagger" style={{ "--stagger-index": 4 }}>

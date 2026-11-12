@@ -20,10 +20,7 @@
   font-size: 2.5rem;
   font-weight: 800;
   letter-spacing: -1px;
-  background: linear-gradient(90deg, var(--green-600), var(--blue-600));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   margin-bottom: var(--space-xs);
 }
 

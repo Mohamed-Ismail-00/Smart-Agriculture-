@@ -5,24 +5,13 @@
 const SECTIONS = [
   {
     id: "overview",
-    label: "Overview",
+    label: "Crop",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
         <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
-  {
-    id: "crops",
-    label: "Crops",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22V12" />
-        <path d="M12 12C12 7 7 3 3 3c0 4 2 8 6 9" />
-        <path d="M12 12c0-5 5-9 9-9-1 4-3 8-7 9" />
       </svg>
     ),
   },
@@ -38,7 +27,7 @@ const SECTIONS = [
   },
   {
     id: "environment",
-    label: "Environment",
+    label: "Weather & soil",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2v6" />
@@ -49,15 +38,6 @@ const SECTIONS = [
         <path d="M22 12h-6" />
         <path d="M4.93 19.07l4.24-4.24" />
         <path d="M14.83 9.17l4.24-4.24" />
-      </svg>
-    ),
-  },
-  {
-    id: "water",
-    label: "Water",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2.69l5.66 5.66a8 8 0 11-11.32 0z" />
       </svg>
     ),
   },

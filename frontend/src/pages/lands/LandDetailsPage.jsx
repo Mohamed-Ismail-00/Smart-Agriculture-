@@ -1,39 +1,32 @@
 /**
  * pages/lands/LandDetailsPage.jsx
- * Slim orchestrator for single-land intelligence view.
+ * One land, one growing season at a time: crop, growth curve, satellite images, weather and soil.
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useLandDetail } from "../../hooks/useLandDetail";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import LandDetailHeader from "../../features/land-detail/LandDetailHeader";
 import LandDetailMobileNav from "../../features/land-detail/LandDetailMobileNav";
-import LandAiInsightsSection from "../../features/land-detail/LandAiInsightsSection";
-import LandMetricsSection from "../../features/land-detail/LandMetricsSection";
+import LandSeasonPicker from "../../features/land-detail/LandSeasonPicker";
+import LandCropCard from "../../features/land-detail/LandCropCard";
+import LandGrowthSection from "../../features/land-detail/LandGrowthSection";
 import LandSatelliteSection from "../../features/land-detail/LandSatelliteSection";
-import LandCropsSection from "../../features/land-detail/LandCropsSection";
-import LandEnvironmentSection from "../../features/land-detail/LandEnvironmentSection";
-import LandWaterSection from "../../features/land-detail/LandWaterSection";
-import LandTimeRangeFilter from "../../features/land-detail/LandTimeRangeFilter";
+import LandWeatherSection from "../../features/land-detail/LandWeatherSection";
+import LandSoilCard from "../../features/land-detail/LandSoilCard";
 import "../Lands.css";
+
+const SOURCES =
+  "Sources: Sentinel-2 L2A satellite images (ESA, via Microsoft Planetary Computer) · weather and ET₀ from Open-Meteo (estimates) · soil from ISRIC SoilGrids (estimate).";
 
 export default function LandDetailsPage() {
   const { id } = useParams();
   const { isDrawer } = useBreakpoint();
-  const isMobileLayout = isDrawer;
   const [activeMobileSection, setActiveMobileSection] = useState("overview");
 
   const {
     land,
-    crops,
-    soil,
-    climate,
-    water,
-    images,
-    cropHealth,
-    harvest,
-    cropZones,
     loading,
     error,
     activeLayer,
@@ -45,77 +38,28 @@ export default function LandDetailsPage() {
     setShowSettings,
     intervalDays,
     setIntervalDays,
-    showAllClimate,
-    setShowAllClimate,
-    showAllWater,
-    setShowAllWater,
     showAllImages,
     setShowAllImages,
-    timeRangeDays,
-    setTimeRangeDays,
-    harvestTick,
-    selectedZoneId,
-    setSelectedZoneId,
+    seasons,
+    season,
+    setSeasonKey,
     soilProfile,
     soilRetryLoading,
     handleRetrySoilProfile,
-    climateSampling,
-    areaHectares,
-    aiInsights,
-    aiLoading,
-    aiError,
-    analyzingLandId,
     isExporting,
-    trackedVars,
     layers,
     derived,
     handleExport,
     handleReanalyze,
-    handleTriggerAnalysis,
     handleDelete,
     handleSaveSettings,
     navigate,
     cropDetection,
-    trustSummary,
     cropConfirmOpen,
     setCropConfirmOpen,
     declaringCrop,
     handleDeclareCrop,
   } = useLandDetail(id);
-
-  const {
-    cropsByType,
-    primaryZone,
-    visibleClimate,
-    visibleWater,
-    avgClimateTemp,
-    avgWaterEt0,
-    filteredClimate,
-    filteredWater,
-    filteredCrops,
-    timeRangeCounts,
-    timeRangeMetricBreakdown,
-    timeRangeSummaryText,
-    hasSyntheticCrops,
-    satelliteDateRange,
-  } = derived;
-
-  const availableSections = useMemo(() => {
-    const sections = ["overview", "crops", "satellite"];
-    if (trackedVars.includes("soil") || trackedVars.includes("climate")) {
-      sections.push("environment");
-    }
-    if (trackedVars.includes("water")) {
-      sections.push("water");
-    }
-    return sections;
-  }, [trackedVars]);
-
-  useEffect(() => {
-    if (!availableSections.includes(activeMobileSection)) {
-      setActiveMobileSection("overview");
-    }
-  }, [availableSections, activeMobileSection]);
 
   if (loading) {
     return (
@@ -146,153 +90,95 @@ export default function LandDetailsPage() {
 
   if (!land) return null;
 
-  const overviewSection = (
+  const cropSection = (
     <>
-      <LandMetricsSection
-        trackedVars={trackedVars}
-        derived={derived}
-        harvest={harvest}
-        land={land}
-        harvestTick={harvestTick}
-        declaredCrop={cropDetection?.declared_crop}
+      <LandCropCard
+        cropDetection={cropDetection}
+        cropConfirmOpen={cropConfirmOpen}
+        setCropConfirmOpen={setCropConfirmOpen}
+        declaringCrop={declaringCrop}
+        onDeclareCrop={handleDeclareCrop}
       />
-      <LandAiInsightsSection
-        landId={id}
-        aiInsights={aiInsights}
-        aiLoading={aiLoading}
-        aiError={aiError}
-        analyzingLandId={analyzingLandId}
-        onTriggerAnalysis={handleTriggerAnalysis}
+      <LandGrowthSection
+        points={derived.seasonCrops}
+        seasonLabel={season?.label}
+        hasSynthetic={derived.hasSyntheticCrops}
+        onReanalyze={handleReanalyze}
+        reanalyzing={reanalyzing}
       />
     </>
-  );
-
-  const cropsSection = (
-    <LandCropsSection
-      crops={filteredCrops}
-      cropsByType={cropsByType}
-      cropZones={cropZones}
-      primaryZone={primaryZone}
-      selectedZoneId={selectedZoneId}
-      onZoneChange={setSelectedZoneId}
-      hasSyntheticCrops={hasSyntheticCrops}
-      cropHealth={cropHealth}
-      harvest={harvest}
-      land={land}
-      trackedVars={trackedVars}
-      handleReanalyze={handleReanalyze}
-      reanalyzing={reanalyzing}
-      timeRangeSummaryText={timeRangeSummaryText}
-      timeRangeDays={timeRangeDays}
-      cropDetection={cropDetection}
-      trustSummary={trustSummary}
-      cropConfirmOpen={cropConfirmOpen}
-      setCropConfirmOpen={setCropConfirmOpen}
-      declaringCrop={declaringCrop}
-      onDeclareCrop={handleDeclareCrop}
-    />
   );
 
   const satelliteSection = (
     <LandSatelliteSection
       land={land}
-      images={images}
       layers={layers}
       activeLayer={activeLayer}
       setActiveLayer={setActiveLayer}
-      derived={derived}
+      seasonImages={derived.seasonImages}
+      visibleImages={derived.visibleImages}
       showAllImages={showAllImages}
       setShowAllImages={setShowAllImages}
     />
   );
 
   const environmentSection = (
-    <LandEnvironmentSection
-      trackedVars={trackedVars}
-      climate={filteredClimate}
-      soilProfile={soilProfile}
-      onRetrySoilProfile={handleRetrySoilProfile}
-      soilRetryLoading={soilRetryLoading}
-      climateSampling={climateSampling}
-      areaHectares={areaHectares}
-      visibleClimate={visibleClimate}
-      avgClimateTemp={avgClimateTemp}
-      showAllClimate={showAllClimate}
-      setShowAllClimate={setShowAllClimate}
-      timeRangeSummaryText={timeRangeSummaryText}
-    />
+    <>
+      <LandWeatherSection
+        climate={derived.seasonClimate}
+        water={derived.seasonWater}
+        summary={derived.weather}
+        lastWeather={derived.lastWeather}
+      />
+      <LandSoilCard soilProfile={soilProfile} onRetry={handleRetrySoilProfile} retrying={soilRetryLoading} />
+    </>
   );
 
-  const waterSection = trackedVars.includes("water") ? (
-    <LandWaterSection
-      water={filteredWater}
-      visibleWater={visibleWater}
-      land={land}
-      avgWaterEt0={avgWaterEt0}
-      showAllWater={showAllWater}
-      setShowAllWater={setShowAllWater}
-      timeRangeSummaryText={timeRangeSummaryText}
-    />
-  ) : null;
-
   const mobilePanels = {
-    overview: overviewSection,
-    crops: cropsSection,
+    overview: cropSection,
     satellite: satelliteSection,
     environment: environmentSection,
-    water: waterSection,
   };
 
   return (
-    <React.Fragment>
-      <div className={`anim-fade-in land-detail${isMobileLayout ? " land-detail--mobile" : ""}`}>
-        <LandDetailHeader
-          land={land}
-          reanalyzing={reanalyzing}
-          isExporting={isExporting}
-          showSettings={showSettings}
-          setShowSettings={setShowSettings}
-          showProgressModal={showProgressModal}
-          setShowProgressModal={setShowProgressModal}
-          intervalDays={intervalDays}
-          setIntervalDays={setIntervalDays}
-          onBack={() => navigate("/lands")}
-          onDelete={handleDelete}
-          onExport={handleExport}
-          onReanalyze={handleReanalyze}
-          onSaveSettings={handleSaveSettings}
-          isMobile={isMobileLayout}
-        />
+    <div className={`anim-fade-in land-detail${isDrawer ? " land-detail--mobile" : ""}`}>
+      <LandDetailHeader
+        land={land}
+        lastSatellite={derived.lastSatellite}
+        reanalyzing={reanalyzing}
+        isExporting={isExporting}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        showProgressModal={showProgressModal}
+        setShowProgressModal={setShowProgressModal}
+        intervalDays={intervalDays}
+        setIntervalDays={setIntervalDays}
+        onBack={() => navigate("/lands")}
+        onDelete={handleDelete}
+        onExport={handleExport}
+        onReanalyze={handleReanalyze}
+        onSaveSettings={handleSaveSettings}
+        isMobile={isDrawer}
+      />
 
-        <LandTimeRangeFilter
-          value={timeRangeDays}
-          onChange={setTimeRangeDays}
-          counts={timeRangeCounts}
-          metricBreakdown={timeRangeMetricBreakdown}
-          summaryText={timeRangeSummaryText}
-        />
+      <LandSeasonPicker seasons={seasons} value={season} onChange={setSeasonKey} />
 
-        {isMobileLayout ? (
-          <>
-            <LandDetailMobileNav
-              activeSection={activeMobileSection}
-              onSectionChange={setActiveMobileSection}
-              availableSections={availableSections}
-            />
-            <div className="land-detail__panel" key={activeMobileSection}>
-              {mobilePanels[activeMobileSection]}
-            </div>
-          </>
-        ) : (
-          <>
-            {overviewSection}
-            {cropsSection}
-            {satelliteSection}
-            {environmentSection}
-            {waterSection}
-          </>
-        )}
-      </div>
-    </React.Fragment>
+      {isDrawer ? (
+        <>
+          <LandDetailMobileNav activeSection={activeMobileSection} onSectionChange={setActiveMobileSection} />
+          <div className="land-detail__panel" key={activeMobileSection}>
+            {mobilePanels[activeMobileSection]}
+          </div>
+        </>
+      ) : (
+        <>
+          {cropSection}
+          {satelliteSection}
+          {environmentSection}
+        </>
+      )}
+
+      <p className="land-detail__sources text-caption">{SOURCES}</p>
+    </div>
   );
 }

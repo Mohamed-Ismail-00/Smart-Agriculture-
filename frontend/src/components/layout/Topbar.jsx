@@ -14,6 +14,7 @@ const PAGE_TITLES = {
   "/dashboard": "Dashboard",
   "/lands": "Lands Explorer",
   "/lands/new": "Add New Land",
+  "/lands/compare": "Compare Lands",
   "/profile": "My Profile",
   "/logs": "Activity Logs",
 };

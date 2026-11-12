@@ -793,143 +793,6 @@
 
 /* Water / irrigation cards */
 /* Time range filter bar */
-.land-detail-time-filter {
-  margin-bottom: var(--space-lg);
-  padding: var(--space-md) var(--space-lg);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.land-detail-time-filter__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-sm);
-}
-
-.land-detail-time-filter__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.land-detail-time-filter__summary {
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-secondary);
-}
-
-.land-detail-time-filter__pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
-.land-detail-time-filter__pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border: 1.5px solid var(--border-color);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.land-detail-time-filter__pill:hover {
-  border-color: var(--gray-300);
-  color: var(--text-primary);
-}
-
-.land-detail-time-filter__pill--active {
-  border-color: var(--green-500);
-  background: var(--green-50);
-  color: var(--green-700);
-  font-weight: 600;
-}
-
-.land-detail-time-filter__pill-label {
-  line-height: 1.2;
-}
-
-.land-detail-time-filter__pill-count {
-  background: var(--gray-100);
-  color: var(--gray-600);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: var(--radius-full);
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.land-detail-time-filter__pill--active .land-detail-time-filter__pill-count {
-  background: var(--green-200);
-  color: var(--green-800);
-}
-
-/* Mobile / tablet: 2×2 grid so every option is visible without scrolling */
-.land-detail-time-filter--compact {
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
-.land-detail-time-filter--compact .land-detail-time-filter__header {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin-bottom: var(--space-sm);
-}
-
-.land-detail-time-filter--compact .land-detail-time-filter__summary {
-  font-size: 11px;
-  width: 100%;
-}
-
-.land-detail-time-filter--compact .land-detail-time-filter__pills {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-sm);
-  overflow: visible;
-}
-
-.land-detail-time-filter--compact .land-detail-time-filter__pill {
-  width: 100%;
-  min-height: 48px;
-  padding: 10px 12px;
-  border-radius: var(--radius-lg);
-  white-space: normal;
-  justify-content: space-between;
-}
-
-.land-detail-time-filter--compact .land-detail-time-filter__pill-label {
-  text-align: left;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-@media (max-width: 380px) {
-  .land-detail-time-filter--compact .land-detail-time-filter__pill-label {
-    font-size: 12px;
-  }
-
-  .land-detail-time-filter--compact .land-detail-time-filter__pill {
-    padding: 10px;
-    min-height: 44px;
-  }
-}
-
 .land-detail-water-intro {
   margin: 0 0 var(--space-md);
   color: var(--text-secondary);
@@ -2255,5 +2118,242 @@
     width: 100%;
     justify-content: center;
     margin-top: 8px;
+  }
+}
+
+/* ---- Land detail: season picker, crop card, growth, weather, soil ---- */
+
+.land-detail__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.land-detail__back {
+  margin-bottom: var(--space-sm);
+}
+
+.land-detail__header-info .land-detail__description {
+  margin: 0 0 var(--space-xs);
+  color: var(--text-secondary);
+}
+
+.land-detail__inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--green-700);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.land-detail-season {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.land-detail-season__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
+}
+
+.land-detail-season__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.land-detail-season__range {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.land-detail-season__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.land-detail-season__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-color);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.land-detail-season__pill:hover {
+  border-color: var(--gray-300);
+  color: var(--text-primary);
+}
+
+.land-detail-season__pill--active {
+  border-color: var(--green-500);
+  background: var(--green-50);
+  color: var(--green-700);
+  font-weight: 600;
+}
+
+.land-detail-season__now {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--green-700);
+}
+
+.land-detail-season__count {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.land-detail-season__pill--active .land-detail-season__count {
+  background: var(--green-200);
+  color: var(--green-800);
+}
+
+.land-crop-card {
+  padding: var(--space-lg);
+}
+
+.land-crop-card__body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.land-crop-card__icon {
+  font-size: 32px;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--green-50);
+}
+
+.land-crop-card__main {
+  flex: 1;
+  min-width: 220px;
+}
+
+.land-crop-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+}
+
+.land-crop-card__name {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 2px 0 4px;
+}
+
+.land-crop-card__note {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+
+.land-growth,
+.land-weather {
+  padding: var(--space-lg);
+}
+
+.land-growth__stats,
+.land-weather__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-md);
+}
+
+.land-growth__stat-value,
+.land-weather__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.land-growth__warning {
+  margin-top: var(--space-sm);
+  color: var(--amber-600, #b45309);
+}
+
+.land-weather__chart {
+  height: 220px;
+}
+
+.land-weather__note {
+  margin-top: var(--space-sm);
+}
+
+.land-soil {
+  padding: var(--space-lg);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-md);
+}
+
+.land-soil__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.land-soil__value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.land-detail__sources {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .land-detail-season {
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+
+  .land-crop-card__body .btn {
+    width: 100%;
+  }
+
+  .land-growth__stats,
+  .land-weather__stats {
+    gap: var(--space-md);
+  }
+
+  .land-weather__chart {
+    height: 180px;
   }
 }

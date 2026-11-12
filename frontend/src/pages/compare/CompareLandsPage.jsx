@@ -13,7 +13,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { listLands, getLandDetail, getLandTimeseries, getCropHealth } from "../../services/api";
+import { listLands, getLandDetail, getLandTimeseries } from "../../services/api";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import "../Pages.css";
 import "./CompareLands.css";
@@ -22,34 +22,25 @@ const METRICS = [
   { key: "crop", label: "Crop Type" },
   { key: "area", label: "Area" },
   { key: "location", label: "Coordinates" },
-  { key: "health", label: "Health Status" },
-  { key: "healthScore", label: "AI Health Score" },
   { key: "ndvi", label: "Latest NDVI" },
+  { key: "ndviDate", label: "Latest image" },
 ];
 
 function getDisplayData(data) {
   if (!data?.detail) return null;
 
   const pts = data.timeseries?.points || [];
-  const latestCrop = pts.length > 0 ? pts[pts.length - 1].payload?.crop_type : "Unknown";
-  const latestNdvi = pts.length > 0 ? pts[pts.length - 1].value : "—";
-  const healthScore = data.health ? data.health.health_score : "—";
-  const health = data.health ? data.health.health_status?.replace("_", " ") : "Unknown";
+  const latest = pts.length > 0 ? pts[pts.length - 1] : null;
+  const latestCrop = latest?.payload?.crop_type?.split("(")[0].trim();
+  const area = data.detail.area_hectares;
 
   return {
     name: data.detail.name,
-    area: `${data.detail.area_hectares?.toFixed(2) || "—"} ha`,
+    area: area != null ? `${Number(area).toFixed(2)} ha · ${(Number(area) / 0.420083).toFixed(1)} feddan` : "—",
     location: data.detail.latitude ? `${Number(data.detail.latitude).toFixed(4)}, ${Number(data.detail.longitude).toFixed(4)}` : "—",
-    crop: latestCrop,
-    ndvi: latestNdvi,
-    health,
-    healthScore,
-    status:
-      data.health?.health_score >= 70
-        ? "healthy"
-        : data.health?.health_score >= 40
-          ? "warning"
-          : "critical",
+    crop: latestCrop ? `${latestCrop} (estimate)` : "Not detected yet",
+    ndvi: latest?.value ?? "—",
+    ndviDate: latest ? new Date(latest.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—",
   };
 }
 
@@ -57,9 +48,6 @@ function formatMetricValue(key, display) {
   if (!display) return "—";
   if (key === "ndvi") {
     return typeof display.ndvi === "number" ? display.ndvi.toFixed(2) : display.ndvi;
-  }
-  if (key === "healthScore") {
-    return `${display.healthScore} / 100`;
   }
   return display[key] ?? "—";
 }
@@ -130,12 +118,11 @@ export default function CompareLandsPage() {
     (async () => {
       setLoadingA(true);
       try {
-        const [detail, timeseries, health] = await Promise.all([
+        const [detail, timeseries] = await Promise.all([
           getLandDetail(landAId),
           getLandTimeseries(landAId, "crops"),
-          getCropHealth(landAId).catch(() => null),
         ]);
-        if (!cancelled) setDataA({ detail, timeseries, health });
+        if (!cancelled) setDataA({ detail, timeseries });
       } catch (err) {
         console.error("Error fetching Land A:", err);
       } finally {
@@ -151,12 +138,11 @@ export default function CompareLandsPage() {
     (async () => {
       setLoadingB(true);
       try {
-        const [detail, timeseries, health] = await Promise.all([
+        const [detail, timeseries] = await Promise.all([
           getLandDetail(landBId),
           getLandTimeseries(landBId, "crops"),
-          getCropHealth(landBId).catch(() => null),
         ]);
-        if (!cancelled) setDataB({ detail, timeseries, health });
+        if (!cancelled) setDataB({ detail, timeseries });
       } catch (err) {
         console.error("Error fetching Land B:", err);
       } finally {
@@ -201,7 +187,7 @@ export default function CompareLandsPage() {
       <div className="compare-hero">
         <h1 className="compare-hero__title">Compare Lands</h1>
         <p className="compare-hero__subtitle">
-          Side-by-side metrics, health scores, and NDVI performance.
+          Two fields side by side: crop, area and NDVI over time.
         </p>
       </div>
 
@@ -287,9 +273,8 @@ export default function CompareLandsPage() {
               <div className="compare-summary-card__body">
                 <div className="compare-summary-card__name compare-summary-card__name--a">{displayA.name}</div>
                 <div className="compare-summary-card__meta">{displayA.crop} · {displayA.area}</div>
-                <span className={`badge badge--${displayA.status}`}>
-                  <span className="badge__dot" />
-                  {displayA.health} ({displayA.healthScore}/100)
+                <span className="badge badge--info">
+                  NDVI {typeof displayA.ndvi === "number" ? displayA.ndvi.toFixed(2) : "—"} · {displayA.ndviDate}
                 </span>
               </div>
             </div>
@@ -297,9 +282,8 @@ export default function CompareLandsPage() {
               <div className="compare-summary-card__body">
                 <div className="compare-summary-card__name compare-summary-card__name--b">{displayB.name}</div>
                 <div className="compare-summary-card__meta">{displayB.crop} · {displayB.area}</div>
-                <span className={`badge badge--${displayB.status}`}>
-                  <span className="badge__dot" />
-                  {displayB.health} ({displayB.healthScore}/100)
+                <span className="badge badge--info">
+                  NDVI {typeof displayB.ndvi === "number" ? displayB.ndvi.toFixed(2) : "—"} · {displayB.ndviDate}
                 </span>
               </div>
             </div>
