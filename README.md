@@ -1,4 +1,4 @@
-# Ghait - Smart Agriculture Data Platform
+# Early Time-Series Crop Classification in the Nile Delta
 
 Crop type classification for the Nile Delta from Sentinel-2 time series, with a web platform where a farmer marks a field on the map and follows it.
 
