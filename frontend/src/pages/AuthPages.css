@@ -433,7 +433,7 @@
 }
 
 .dashboard__header {
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1px solid var(--border-color);
   padding: 0 var(--space-xl);
   height: 64px;
@@ -528,7 +528,7 @@
 }
 
 .dashboard__card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
@@ -626,7 +626,7 @@
   }
 
   .auth-form-container {
-    background: rgba(255, 255, 255, 0.93);
+    background: var(--surface-glass);
     backdrop-filter: blur(20px) saturate(1.4);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     border-radius: 28px;
@@ -685,12 +685,12 @@
   .input-field {
     height: 52px;
     font-size: 16px; /* Prevents iOS zoom on focus */
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--surface-glass);
     border-color: rgba(0, 0, 0, 0.08);
   }
 
   .input-field:focus {
-    background: #fff;
+    background: var(--surface);
     border-color: var(--green-500);
   }
 
@@ -768,7 +768,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: #fff !important;
+  background: var(--surface) !important;
   color: #1f2937 !important;
   border: 1px solid #e5e7eb !important;
   font-weight: 600;

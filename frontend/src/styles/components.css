@@ -164,7 +164,7 @@
 /* Primary */
 .btn--primary {
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--on-primary);
   box-shadow: 0 4px 14px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .btn--primary:hover {
@@ -179,14 +179,14 @@
 
 /* Secondary */
 .btn--secondary {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--surface-glass);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--gray-700);
   border: 1.5px solid rgba(0,0,0,0.1);
 }
 .btn--secondary:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-glass);
   border-color: var(--gray-300);
   transform: translateY(-2px) scale(1.02);
 }
@@ -399,7 +399,7 @@
   font-family: var(--font-sans);
   font-size: 15px;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-glass);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
   outline: none;
@@ -417,12 +417,12 @@
 
 .input-field:hover {
   border-color: var(--gray-300);
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .input-field:focus {
   border-color: var(--green-500);
-  background: #ffffff;
+  background: var(--surface);
   box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15), 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 

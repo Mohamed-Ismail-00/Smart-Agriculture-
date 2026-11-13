@@ -56,9 +56,32 @@ def list_all_lands(db: Session, user_id: Optional[int] = None) -> LandListRespon
             if img.land_id not in latest_images:
                 latest_images[img.land_id] = img
 
+    # Newest NDVI observation per land, for the dashboard's land table
+    latest_ndvi = {}
+    if land_ids:
+        from sqlalchemy import func
+        from app.models.land_crop import LandCrop
+
+        newest = (
+            select(LandCrop.land_id, func.max(LandCrop.timestamp).label("ts"))
+            .where(LandCrop.land_id.in_(land_ids), LandCrop.ndvi_value.is_not(None))
+            .group_by(LandCrop.land_id)
+            .subquery()
+        )
+        stmt = select(LandCrop.land_id, LandCrop.timestamp, LandCrop.ndvi_value).join(
+            newest, (LandCrop.land_id == newest.c.land_id) & (LandCrop.timestamp == newest.c.ts)
+        )
+        # Lands split into crop zones have one row per zone at the same time: average them.
+        values: dict = {}
+        for land_id, ts, ndvi in db.execute(stmt).all():
+            values.setdefault(land_id, (ts, []))[1].append(float(ndvi))
+        for land_id, (ts, ndvis) in values.items():
+            latest_ndvi[land_id] = (round(sum(ndvis) / len(ndvis), 4), ts.isoformat())
+
     items = []
     for r in rows:
         latest_img = latest_images.get(r.land_id)
+        ndvi, ndvi_at = latest_ndvi.get(r.land_id, (None, None))
         latest_image_url = f"/api/v1/lands/{r.public_id}/images/{latest_img.id}/content" if latest_img else None
         
         items.append(
@@ -73,6 +96,8 @@ def list_all_lands(db: Session, user_id: Optional[int] = None) -> LandListRespon
                 status=r.status,
                 created_at=r.created_at.isoformat(),
                 latest_image_url=latest_image_url,
+                latest_ndvi=ndvi,
+                latest_ndvi_at=ndvi_at,
             )
         )
     return LandListResponse(lands=items, total=len(items))

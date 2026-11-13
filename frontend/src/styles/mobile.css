@@ -161,7 +161,7 @@
 }
 
 .confirm-dialog {
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
   width: 100%;
@@ -260,7 +260,7 @@
     right: 0;
     height: calc(60px + env(safe-area-inset-bottom, 0));
     padding-bottom: env(safe-area-inset-bottom, 0);
-    background: #fff;
+    background: var(--surface);
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
     z-index: 200;

@@ -32,6 +32,19 @@
   --gray-900: #111827;
   --gray-950: #030712;
 
+  /* Nile Delta identity: silt, clover, wheat, canal water */
+  --silt:        #3a2b1f;
+  --silt-2:      #4c3a2b;
+  --clover:      #2f6b3a;
+  --clover-soft: #e3eedf;
+  --leaf:        #7fa24a;
+  --wheat:       #c9a227;
+  --wheat-soft:  #f6edcc;
+  --nile:        #2e6f8e;
+  --cotton:      #f2f4ee;
+  --line:        #dde3d6;
+  --muted:       #66705f;
+
   /* Accent */
   --amber-400: #fbbf24;
   --amber-500: #f59e0b;
@@ -58,7 +71,7 @@
 
   /* Surfaces (Glassmorphism Support) */
   --bg-primary:    rgba(255, 255, 255, 0.7);
-  --bg-secondary:  #f4f7f6;
+  --bg-secondary:  var(--cotton);
   --bg-sidebar:    rgba(5, 46, 22, 0.85);
   --text-primary:  var(--gray-900);
   --text-secondary: var(--gray-500);
@@ -66,7 +79,8 @@
   --border-color:  var(--gray-200);
 
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Readex Pro', 'IBM Plex Sans Arabic', system-ui, sans-serif;
 
   /* Spacing (4px grid) */
   --space-xs:  4px;
@@ -109,6 +123,85 @@
   --bp-tablet: 1024px;
   --bp-drawer: 1024px;
   --touch-target: 44px;
+
+  /* Surfaces that follow the theme */
+  --surface:        #ffffff;
+  --surface-glass:  rgba(255, 255, 255, 0.7);
+  --glass-border:   rgba(255, 255, 255, 0.4);
+  --on-primary:     #ffffff;
+  color-scheme: light;
+}
+
+/* --- Dark theme: night over the Delta (set by the toggle in the top bar) ---
+   Neutral and green scales are mirrored, so text and tints keep their contrast. */
+:root[data-theme="dark"] {
+  --silt:        #1d1711;
+  --silt-2:      #2a2119;
+  --clover:      #6fb27c;
+  --clover-soft: #1f3324;
+  --leaf:        #9cc36a;
+  --wheat:       #d9b64a;
+  --wheat-soft:  #3a3118;
+  --nile:        #6aaed0;
+  --cotton:      #141711;
+  --line:        #2f362b;
+  --muted:       #9aa491;
+
+  --gray-50:  #161a14;
+  --gray-100: #1c2019;
+  --gray-200: #2f362b;
+  --gray-300: #3d4538;
+  --gray-400: #6b7466;
+  --gray-500: #9aa491;
+  --gray-600: #b6bdae;
+  --gray-700: #cdd3c6;
+  --gray-800: #e1e5db;
+  --gray-900: #e9ece4;
+  --gray-950: #f5f7f2;
+
+  --green-50:  #17261b;
+  --green-100: #1f3324;
+  --green-200: #2b4a32;
+  --green-300: #3f6b48;
+  --green-400: #6fb27c;
+  --green-500: #6fb27c;
+  --green-600: #7fc08b;
+  --green-700: #9ccfa5;
+  --green-800: #b9dfbf;
+  --green-900: #d4ecd7;
+  --green-950: #eaf6ec;
+
+  --error:          #e07a63;
+  --error-light:    #3a1f19;
+  --error-border:   #5c2e24;
+  --warning:        #d9a54a;
+  --warning-light:  #33280f;
+  --warning-border: #57441a;
+  --success:        #6fb27c;
+  --success-light:  #1f3324;
+  --success-border: #2b4a32;
+  --info:           #6aaed0;
+  --info-light:     #16262f;
+  --info-border:    #23404f;
+
+  --bg-primary:     #1c2019;
+  --bg-secondary:   var(--cotton);
+  --text-primary:   #e9ece4;
+  --text-secondary: #9aa491;
+  --border-color:   #2f362b;
+
+  --surface:        #1c2019;
+  --surface-glass:  rgba(28, 32, 25, 0.92);
+  --glass-border:   #2f362b;
+  --on-primary:     #10170f;
+
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 4px 10px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 10px 20px rgba(0, 0, 0, 0.45);
+  --shadow-xl:   0 20px 30px rgba(0, 0, 0, 0.5);
+  --shadow-glow: none;
+  --gradient-primary: linear-gradient(var(--clover), var(--clover));
+  color-scheme: dark;
 }
 
 /* --- Reset & Base --- */
@@ -161,7 +254,7 @@ a:hover {
 
 .card {
   background: var(--bg-primary);
-  border: 1px solid rgba(255,255,255,0.4);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -224,4 +317,11 @@ img {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--green-500);
+}
+
+/* Chart tooltips follow the theme */
+.recharts-default-tooltip {
+  background: var(--surface) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
 }

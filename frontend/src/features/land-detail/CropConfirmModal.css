@@ -170,7 +170,7 @@
 }
 
 .crop-confirm-modal__signal {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--surface-glass);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 8px 10px;

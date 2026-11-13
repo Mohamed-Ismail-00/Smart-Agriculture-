@@ -412,7 +412,7 @@
 
 .ai-insight-card:hover {
   transform: translateX(4px);
-  background: white;
+  background: var(--surface);
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 

@@ -65,11 +65,11 @@ const icons = {
 const baseNavItems = [
   { section: "MAIN" },
   { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
-  { to: "/lands",     icon: "lands",     label: "Lands Explorer" },
-  { to: "/lands/new", icon: "addLand",   label: "Add New Land" },
+  { to: "/lands",     icon: "lands",     label: "My Lands" },
+  { to: "/lands/new", icon: "addLand",   label: "Add a Land" },
   { to: "/lands/compare", icon: "compare", label: "Compare Lands" },
 
-  { section: "GENERAL" },
+  { section: "ACCOUNT" },
   { to: "/profile", icon: "profile", label: "Profile" },
 ];
 
@@ -103,9 +103,10 @@ export default function Sidebar({ isDrawer, onClose }) {
       {/* Logo */}
       <div className="sidebar__header">
         <div className="sidebar__logo-icon">
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 2C16 2 6 10 6 18C6 23.5 10.5 28 16 28C21.5 28 26 23.5 26 18C26 10 16 2 16 2Z" fill="rgba(255,255,255,0.9)"/>
-            <path d="M16 8C16 8 10 14 10 19C10 22.3 12.7 25 16 25C19.3 25 22 22.3 22 19C22 14 16 8 16 8Z" fill="rgba(255,255,255,0.5)"/>
+          {/* Three field strips and a canal: the Delta from above */}
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 9h20M6 15h20M6 21h20" stroke="var(--wheat)" strokeWidth="3" strokeLinecap="round" />
+            <path d="M7 27c6-5 12 1 18-4" stroke="#f3efe6" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </div>
         <span className="sidebar__logo-text">AgriData Egypt</span>

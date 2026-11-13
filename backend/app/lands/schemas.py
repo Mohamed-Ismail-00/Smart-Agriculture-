@@ -102,6 +102,8 @@ class LandListItem(BaseModel):
     status: str
     created_at: str
     latest_image_url: Optional[str] = None
+    latest_ndvi: Optional[float] = None
+    latest_ndvi_at: Optional[str] = None
 
 
 class LandListResponse(BaseModel):

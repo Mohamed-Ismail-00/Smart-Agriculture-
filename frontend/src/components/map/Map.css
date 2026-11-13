@@ -140,7 +140,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
 .map-draw-wrapper .leaflet-control-attribution {
   font-family: var(--font-sans) !important;
   font-size: 10px !important;
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: var(--surface-glass) !important;
   padding: 2px 6px !important;
 }
 
@@ -178,7 +178,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   justify-content: space-between;
   gap: var(--space-sm);
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--surface-glass);
   border-bottom: 1px solid var(--border-color);
   z-index: 1000;
   position: relative;
@@ -291,7 +291,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   z-index: 12010;
   position: relative;
   pointer-events: auto;
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1px solid var(--border-color);
   padding-top: env(safe-area-inset-top, 0);
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.1);
@@ -415,7 +415,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
 .map-toolbar {
   display: flex;
   gap: 2px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--surface-glass);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -454,7 +454,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
 
 /* --- Fullscreen button --- */
 .map-fullscreen-btn {
-  background: rgba(255, 255, 255, 0.96) !important;
+  background: var(--surface-glass) !important;
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color) !important;
   border-radius: var(--radius-md) !important;
@@ -513,7 +513,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   font-size: 15px;
   font-weight: 500;
   color: var(--gray-700);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface-glass);
   backdrop-filter: blur(4px);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
@@ -581,7 +581,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   left: var(--space-sm);
   right: var(--space-sm);
   z-index: 500;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--surface-glass);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -692,7 +692,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
 .map-view-wrapper .leaflet-control-attribution {
   font-family: var(--font-sans) !important;
   font-size: 10px !important;
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: var(--surface-glass) !important;
 }
 
 /* Popup styling */
@@ -714,7 +714,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   left: var(--space-sm);
   right: var(--space-sm);
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--surface-glass);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -853,7 +853,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -872,7 +872,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--text-primary);
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
 }
@@ -889,7 +889,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -925,7 +925,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   margin: 0;
   padding: 4px;
   list-style: none;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -999,7 +999,7 @@ body.map-draw-body-lock .topbar-notif-sheet {
   max-width: calc(100% - 2 * var(--space-md));
   padding: 6px 10px;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--surface-glass);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);

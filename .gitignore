@@ -89,7 +89,7 @@ logs.zip
 present.html
 generate_skeleton.js
 terminals/
-Assets/
+/Assets/
 
 # Course material from the TA (kept local)
 ml/advisor/

@@ -344,7 +344,9 @@ export default function CompareLandsPage() {
                     <Tooltip
                       contentStyle={{
                         borderRadius: 8,
-                        border: "1px solid #e0e0e0",
+                        border: "1px solid var(--border-color)",
+                        background: "var(--surface)",
+                        color: "var(--text-primary)",
                         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                         fontSize: 13,
                       }}
